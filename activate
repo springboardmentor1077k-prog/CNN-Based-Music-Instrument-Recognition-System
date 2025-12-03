@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+conda init
+source $HOME/.bashrc
+conda activate instrunet_env
