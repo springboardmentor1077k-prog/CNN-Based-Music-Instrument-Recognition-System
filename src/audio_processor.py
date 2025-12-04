@@ -132,7 +132,7 @@ if __name__ == "__main__":
     # Ensure outputs directory exists
     output_dir = os.path.join(PROJECT_ROOT, "outputs")
     os.makedirs(output_dir, exist_ok=True)
-    output_image_path = os.path.join(output_dir, "waveform_example.png") 
+    output_image_path = os.path.join(output_dir, f"waveform_{os.path.basename(test_audio_file_path)}.png") 
 
     if os.path.exists(test_audio_file_path):
         processed_audio, processed_sr = process_audio_file(test_audio_file_path)
