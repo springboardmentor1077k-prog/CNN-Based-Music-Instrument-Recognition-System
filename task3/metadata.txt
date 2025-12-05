@@ -1,0 +1,33 @@
+Example 0:
+  note: 180871
+  pitch: 81
+  velocity: 127
+  instrument id: 676
+  instrument name: mallet_acoustic_065
+  instrument family id: 5
+  instrument family name: mallet
+  instrument source: acoustic
+  qualities: ['fast_decay', 'percussive']
+--------------------------------------------------
+Example 1:
+  note: 176097
+  pitch: 106
+  velocity: 75
+  instrument id: 192
+  instrument name: mallet_electronic_004
+  instrument family id: 5
+  instrument family name: mallet
+  instrument source: electronic
+  qualities: ['bright', 'distortion', 'nonlinear_env']
+--------------------------------------------------
+Example 2:
+  note: 82568
+  pitch: 58
+  velocity: 127
+  instrument id: 608
+  instrument name: flute_synthetic_006
+  instrument family id: 2
+  instrument family name: flute
+  instrument source: synthetic
+  qualities: ['distortion']
+--------------------------------------------------
