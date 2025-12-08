@@ -1,0 +1,9 @@
+# --- 1. Ignore EVERYTHING by default ---
+*
+
+# --- 2. Exception: Un-ignore (Allow) the Spectrogram Folder ---
+!Mel_Spectrogram_Dataset/
+!Mel_Spectrogram_Dataset/**
+
+# --- 3. Exception: Keep the .gitignore file itself ---
+!.gitignore
