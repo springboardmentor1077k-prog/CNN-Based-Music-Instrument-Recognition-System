@@ -58,3 +58,37 @@ plt.savefig("outputs/mfcc_org.png")
 plt.close()
 
 print("All plots saved successfully in outputs/ folder!")
+
+# ==============================
+# Combined comparison figure
+# ==============================
+import matplotlib.pyplot as plt
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 6))
+
+# Waveform
+librosa.display.waveshow(y, sr=sr, ax=axes[0, 0])
+axes[0, 0].set_title("Waveform")
+
+# Linear Spectrogram
+img1 = librosa.display.specshow(S_db, sr=sr, x_axis="time", y_axis="linear", ax=axes[0, 1])
+axes[0, 1].set_title("Spectrogram (STFT, linear)")
+
+# Mel-Spectrogram
+img2 = librosa.display.specshow(mel_spec_db, sr=sr, x_axis="time", y_axis="mel", ax=axes[1, 0])
+axes[1, 0].set_title("Mel-Spectrogram")
+
+# MFCCs
+img3 = librosa.display.specshow(mfccs, sr=sr, x_axis="time", ax=axes[1, 1])
+axes[1, 1].set_title("MFCCs")
+
+fig.colorbar(img1, ax=axes[0, 1], format="%+2.0f dB")
+fig.colorbar(img2, ax=axes[1, 0], format="%+2.0f dB")
+fig.colorbar(img3, ax=axes[1, 1])
+
+plt.tight_layout()
+plt.savefig("outputs/comparison_org.png")
+plt.close()
+
+print("Saved comparison figure: outputs/comparison_org.png")
+
