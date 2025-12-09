@@ -67,79 +67,72 @@ def explore_dataset(dataset_path):
         print("No WAV files found to check.")
     print("---------------------------------------\n")
 
-def process_audio_file(file_path, target_sr=16000):
+def normalize_audio(y):
+    """Normalizes the amplitude of the audio signal."""
+    return librosa.util.normalize(y)
+
+def trim_silence(y, top_db=20):
+    """Trims silence from the beginning and end of the audio."""
+    y_trimmed, _ = librosa.effects.trim(y, top_db=top_db)
+    return y_trimmed
+
+def fix_duration(y, sr, duration_seconds=3.0):
     """
-    Loads an audio file, converts it to mono if stereo, resamples it to a target sample rate,
-    and generates a waveform plot.
+    Fixes the duration of the audio to exactly duration_seconds.
+    If shorter, pads with zeros. If longer, crops the center.
+    """
+    target_length = int(sr * duration_seconds)
+    if len(y) < target_length:
+        # Pad with zeros
+        padding = target_length - len(y)
+        y_fixed = np.pad(y, (0, padding), 'constant')
+    elif len(y) > target_length:
+        # Center crop
+        start = (len(y) - target_length) // 2
+        y_fixed = y[start : start + target_length]
+    else:
+        y_fixed = y
+    
+    return y_fixed
+
+def process_audio_file(file_path, target_sr=16000, duration=3.0):
+    """
+    Loads an audio file, converts it to mono, resamples it, normalizes, 
+    trims silence, and fixes duration.
 
     Args:
         file_path (str): The path to the audio file.
         target_sr (int): The target sampling rate for resampling.
+        duration (float): Target duration in seconds.
 
     Returns:
-        tuple: A tuple containing the processed audio (numpy array) and its sampling rate (int).
+        tuple: (processed_audio, sample_rate) or (None, None) if failure.
     """
-    print(f"Processing: {file_path}")
     # Load audio
     try:
         y, sr = librosa.load(file_path, sr=None, mono=False)
-    except FileNotFoundError:
-        print(f"Error: File not found at {file_path}")
+    except Exception as e:
+        print(f"Error loading {file_path}: {e}")
         return None, None
 
-    # Identify stereo and convert to mono if necessary
+    # Mono conversion
     if y.ndim > 1:
-        print(f"  - Original audio is stereo (channels: {y.shape[0]}). Converting to mono.")
-        y_mono = librosa.to_mono(y)
-    else:
-        print("  - Original audio is mono.")
-        y_mono = y
+        y = librosa.to_mono(y)
 
-    # Resample to target_sr
+    # Resample
     if sr != target_sr:
-        print(f"  - Original sampling rate: {sr} Hz. Resampling to {target_sr} Hz.")
-        y_resampled = librosa.resample(y_mono, orig_sr=sr, target_sr=target_sr)
-        sr_processed = target_sr
-    else:
-        print(f"  - Original sampling rate: {sr} Hz. No resampling needed.")
-        y_resampled = y_mono
-        sr_processed = sr
+        y = librosa.resample(y, orig_sr=sr, target_sr=target_sr)
+    
+    # Normalize
+    y = normalize_audio(y)
 
-    # Generate waveform graph (placeholder for now, will be enhanced)
-    plt.figure(figsize=(12, 4))
-    librosa.display.waveshow(y_resampled, sr=sr_processed)
-    plt.title(f'Waveform of {os.path.basename(file_path)} (Processed)')
-    plt.xlabel("Time")
-    plt.ylabel("Amplitude")
-    plt.tight_layout()
-    # plt.savefig(f"waveform_{os.path.basename(file_path)}.png") # Uncomment to save
-    # plt.show() # Uncomment to display
-    print(f"  - Audio processed. Shape: {y_resampled.shape}, Sample Rate: {sr_processed} Hz")
+    # Trim Silence
+    y = trim_silence(y)
 
-    return y_resampled, sr_processed
+    # Fix Duration
+    y = fix_duration(y, target_sr, duration)
+
+    return y, target_sr
 
 if __name__ == "__main__":
-    # 1. Explore the dataset
-    explore_dataset(DATASET_DIR)
-
-    # 2. Execute processing on a sample file
-    print("Executing sample processing task...")
-    
-    # Construct path to a specific file we know exists (or should exist)
-    # Based on file listing: datasets/IRMAS-TrainingData/cel/[cel][cla]0001__1.wav
-    test_audio_file_path = os.path.join(DATASET_DIR, "cel", "[cel][cla]0001__1.wav")
-    
-    # Ensure outputs directory exists
-    output_dir = os.path.join(PROJECT_ROOT, "outputs")
-    os.makedirs(output_dir, exist_ok=True)
-    output_image_path = os.path.join(output_dir, f"waveform_{os.path.basename(test_audio_file_path)}.png") 
-
-    if os.path.exists(test_audio_file_path):
-        processed_audio, processed_sr = process_audio_file(test_audio_file_path)
-        if processed_audio is not None:
-            plt.savefig(output_image_path)
-            print(f"  - Waveform plot saved to {output_image_path}")
-            plt.close() 
-    else:
-        print(f"Test file not found: {test_audio_file_path}")
-        print("Please ensure the IRMAS dataset is unpacked in 'datasets/IRMAS-TrainingData'.")
+    pass

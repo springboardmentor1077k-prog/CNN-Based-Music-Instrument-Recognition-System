@@ -2,4 +2,5 @@ librosa
 matplotlib
 numpy
 scipy
-pandas
+soundfile
+tqdm
