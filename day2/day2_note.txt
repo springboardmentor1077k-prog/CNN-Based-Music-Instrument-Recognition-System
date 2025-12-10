@@ -1,0 +1,3 @@
+Day 2: Loaded sample audio, inspected stereo channels, and converted them to mono. 
+Visualized raw waveform, stereo channels, mono waveform, STFT spectrogram, Mel spectrogram, and MFCC.
+Added short comparison explaining differences between representations.
