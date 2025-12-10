@@ -1,0 +1,3 @@
+Day 4: Implemented audio preprocessing pipeline. 
+Performed trimming of silence, mono conversion, normalization, fixing duration and saving cleaned audio.
+Organized cleaned audio into instrument-wise folders.
