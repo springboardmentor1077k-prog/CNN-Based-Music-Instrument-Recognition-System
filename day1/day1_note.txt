@@ -1,0 +1,3 @@
+Day 1: Downloaded and studied the IRMAS dataset. 
+Documented dataset structure, instrument classes, and data usage.
+Created dataset_info.txt summarizing labels and dataset source.
