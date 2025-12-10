@@ -73,7 +73,7 @@ def process_instruments():
         print(f"\n=== Processing instrument: {inst_code} ({len(files)} files) ===")
 
         # For now, process only first 3 files per instrument to test
-        for path in files[:3]:
+        for path in files[:1]:
             filename = os.path.basename(path)
             out_path = os.path.join(output_folder, filename.replace(".wav", "_clean.wav"))
             clean_single_file(path, out_path)
