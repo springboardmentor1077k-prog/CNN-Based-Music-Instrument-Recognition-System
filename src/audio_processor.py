@@ -95,6 +95,27 @@ def fix_duration(y, sr, duration_seconds=3.0):
     
     return y_fixed
 
+def add_noise(y, noise_level=0.005):
+    """
+    Adds Gaussian noise to the audio signal.
+    """
+    noise = np.random.randn(len(y))
+    augmented_y = y + noise_level * noise
+    return augmented_y
+
+def time_stretch(y, rate=1.0):
+    """
+    Stretches the time of the audio signal without changing pitch.
+    rate > 1.0 speeds up, rate < 1.0 slows down.
+    """
+    return librosa.effects.time_stretch(y, rate=rate)
+
+def pitch_shift(y, sr, n_steps=0):
+    """
+    Shifts the pitch of the audio signal by n_steps semitones.
+    """
+    return librosa.effects.pitch_shift(y, sr=sr, n_steps=n_steps)
+
 def process_audio_file(file_path, target_sr=16000, duration=3.0):
     """
     Loads an audio file, converts it to mono, resamples it, normalizes, 
