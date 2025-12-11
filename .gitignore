@@ -1,9 +1,15 @@
-# --- 1. Ignore EVERYTHING by default ---
-*
+# --- 1. Ignore Heavy Audio Datasets (CRITICAL) ---
+Cleaned_Audio_Dataset/
+IRMAS-TrainingData/
+Test_Audio/
+Processed_Spectrograms/
 
-# --- 2. Exception: Un-ignore (Allow) the Spectrogram Folder ---
-!Mel_Spectrogram_Dataset/
-!Mel_Spectrogram_Dataset/**
+# --- 2. Ignore System Files ---
+__pycache__/
+*.DS_Store
+venv/
+.vscode/
+.git/
 
-# --- 3. Exception: Keep the .gitignore file itself ---
-!.gitignore
+# --- 3. Allow everything else ---
+# (We removed the '*' rule so your code and models will now be detected)
