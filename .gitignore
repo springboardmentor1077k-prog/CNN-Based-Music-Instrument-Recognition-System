@@ -1,0 +1,20 @@
+###############################
+# IGNORE ALL HEAVY PIPELINE DATA
+###############################
+
+pipeline/audio_clean/*
+pipeline/audio_augmented/*
+pipeline/augmented/*
+pipeline/mel/*
+pipeline/mfcc/*
+pipeline/clean_audio/*
+
+# ALLOW ONLY SAMPLE FILES
+!pipeline/sample_audio/*
+!pipeline/samples/**
+
+###############################
+# PYTHON
+###############################
+__pycache__/
+*.pyc
