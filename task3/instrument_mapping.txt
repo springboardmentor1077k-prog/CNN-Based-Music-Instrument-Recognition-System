@@ -1,5 +1,0 @@
-Example | Inst_ID | Instrument | Fam_ID | Family
-----------------------------------------------------------------------
-0       | 676     | mallet_acoustic_065       | 5      | mallet
-1       | 192     | mallet_electronic_004     | 5      | mallet
-2       | 608     | flute_synthetic_006       | 2      | flute
