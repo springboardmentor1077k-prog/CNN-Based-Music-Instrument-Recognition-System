@@ -1,0 +1,6 @@
+Dataset: IRMAS – Instrument Recognition in Musical Audio Signals
+Data Type: Labeled audio clips of musical instruments
+Classes: cel, cla, flu, gac, gel, org, pia, sax, tru, vio, voi
+Note: Dataset stored locally in /dataset/IRMAS and not uploaded to GitHub due to large size.
+Download Source: https://zenodo.org/record/1290750/files/IRMAS-TrainingData.zip?download=1
+Usage: Dataset will be used to train CNN model for instrument recognition.
