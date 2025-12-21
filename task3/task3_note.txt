@@ -1,0 +1,3 @@
+Task 3: Selected 3 instrument samples (guitar, piano, flute). 
+Extracted metadata and instrument labels from filenames. 
+Created JSON label file and a CSV mapping table containing filename, instrument, family, and source details.
