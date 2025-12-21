@@ -1,0 +1,10 @@
+Task 7 – Audio Data Pipeline
+
+Designed and implemented an end-to-end audio data pipeline.
+The pipeline includes audio loading, silence trimming, duration fixing,
+normalization, data augmentation, and MFCC feature extraction.
+
+The pipeline was applied to three instruments:
+guitar, piano, and flute.
+
+The final extracted features are saved and ready for CNN training.
