@@ -1,0 +1,8 @@
+Task 8 – CNN Architecture Design
+
+Designed a deep CNN architecture for instrument recognition using
+Mel spectrograms as input. The architecture consists of multiple
+convolutional layers with increasing filter sizes, ReLU activation,
+and max pooling to learn hierarchical audio patterns. The extracted
+features are flattened and passed through dense layers, and the final
+softmax layer predicts instrument classes.
