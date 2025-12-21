@@ -1,0 +1,3 @@
+Task 6: Implemented audio data augmentation using time stretching,
+pitch shifting, and noise addition for guitar, piano, and flute.
+These augmentations increase dataset diversity and improve CNN robustness.
