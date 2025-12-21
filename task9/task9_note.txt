@@ -1,0 +1,3 @@
+Task 9:
+Trained CNN modeld on extracted audio features for guitar, piano, and flute.
+The model was compiled, trained, and saved for further evaluation.
