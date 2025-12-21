@@ -1,0 +1,29 @@
+Task 2 – Waveform, Spectrogram, Mel-Spectrogram and MFCC (ORG class)
+
+I took one audio sample from the ORG (organ) class and generated:
+- Waveform (time vs amplitude)
+- STFT Spectrogram (linear frequency scale)
+- Mel-Spectrogram (Mel frequency scale)
+- MFCCs (13 Mel-frequency cepstral coefficients)
+
+Difference between the representations:
+- Waveform:
+  Shows how amplitude changes over time. It is a time-domain view and does not clearly show which frequencies are present, so it is less useful on its own for instrument recognition.
+
+- Spectrogram (STFT, linear):
+  Shows how the frequency content changes over time using a linear frequency axis. It contains rich time–frequency information, but the linear scale does not match human hearing well. High frequencies occupy a large area even though humans are less sensitive there.
+
+- Mel-Spectrogram:
+  This is a spectrogram mapped to the Mel scale, which is approximately how humans perceive pitch. It gives more resolution in low and mid frequencies and less in very high frequencies. This makes the representation more compact and perceptually meaningful.
+
+- MFCC:
+  MFCCs are computed from the Mel-spectrogram using a cosine transform. They compress the spectral shape into a small number of coefficients. They are very useful as numeric features for traditional ML models but lose some fine time–frequency detail.
+
+Which spectrogram is better and why?
+
+For a CNN-based music instrument recognition system, the Mel-Spectrogram is better as the main input representation because:
+- It is a 2D time–frequency image that works naturally with convolutional neural networks.
+- The Mel frequency scale matches human hearing, focusing on low and mid frequency regions where instrument timbre is most important.
+- It preserves more detailed patterns than the heavily-compressed MFCCs, while being more perceptually meaningful than a linear-frequency spectrogram.
+
+Therefore, in this project I will primarily use Mel-Spectrograms as input to the CNN model.
