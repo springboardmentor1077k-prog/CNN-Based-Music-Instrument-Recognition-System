@@ -1,0 +1,3 @@
+Task 5: Generated STFT, Mel spectrogram, and MFCC for guitar, piano, and flute samples. 
+Compared visible differences and wrote a short note explaining characteristics of each representation.
+Prepared these for CNN feature understanding.
