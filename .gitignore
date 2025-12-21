@@ -1,2 +1,7 @@
 IRMAS-TrainingData/
 data/IRMAS/
+HEAD
+cnn_env/
+__pycache__/
+*.pyc
+b0e1ba1f (.gitignore to exclude legacy task-wise folders)
