@@ -1,1 +1,57 @@
+Task 1: Exploratory data analysis(EDA)
+•  explore the audio.
+•  load the audio in python (librosa).
+•  identify stereo
+•  convert to 16000 hz sampling rate.
+•  generate the waveform graph.
+• Dataset Exploration(EDA)
+• Processing
 
+Task 2:
+	○  Generate spectrogram (STFT), from the plot.
+	○  Generate mell spectrogram
+	○  Generate MFCC Plot
+	○  Write a short note in the markdown - which spectrogram is best for the project and why? 
+	
+Task 3:
+	○  Inspect atleast 3 metadata entries (from nsynth-training dataset)
+	○  Load the audio files from the dataset (2-3)
+	○  Get the labels
+	○  Create the instrument mapping tables (file_name, instrument, family it belongs to, source)
+
+Task 4:
+Audio Preprocessing Pipeline for CNN
+Goal
+- Build a preprocessing pipeline so that the CNN can generalize spectrogram inputs.
+- Ensure the model achieves high and consistent accuracy by standardizing audio data.
+
+Processing Steps
+- Load Audio
+- Use librosa to load audio files (default: float32).
+- Extract metadata (sampling rate, channels, duration).
+- Convert to Mono
+- Merge stereo channels (left + right) into a single channel.
+- Resample to 16 kHz
+- Downsample from 44.1 kHz → 16 kHz for faster training.
+- 16 kHz is sufficient for speech/music recognition tasks.
+- Normalize Amplitude
+- Scale audio to a uniform dynamic range.
+- Prevents loudness imbalance across samples.
+- Silence Trimming
+- Remove empty or nearly silent segments.
+- Keeps only meaningful audio content.
+- Pad Duration
+- Fix duration to 3 seconds.
+- Shorter clips → zero-padding; longer clips → trimming.
+- Export Clean Audio
+- Save preprocessed audio for training.
+- Ensures consistency across dataset.
+
+Notes
+- From next week, the CNN model will depend entirely on this preprocessing pipeline.
+- Proper preprocessing ensures robust spectrogram features and improves generalization.
+
+Task 5:
+	• Take 3 audio for each (3) instrument
+	• Create stft, mel-spectrogram
+	• Compare visible outputs
