@@ -22,6 +22,29 @@ def save_mel_spectrogram(y, sr, output_path, title=None):
     plt.savefig(output_path, dpi=300)
     plt.close()
 
+def save_clean_spectrogram(y, sr, output_path):
+    """
+    Generates and saves a CLEAN Mel Spectrogram (no axes, no labels, no title).
+    Crucial for training CNNs to prevent overfitting on visual artifacts.
+    """
+    plt.figure(figsize=(12, 4))
+    # Remove all margins and axes
+    plt.axis('off')
+    plt.gca().set_axis_off()
+    plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+    plt.margins(0,0)
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+    M = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, power=1.0)
+    M_db = librosa.amplitude_to_db(M, ref=np.max)
+    
+    librosa.display.specshow(M_db, sr=sr)
+    
+    # Save without any padding or borders
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
+    plt.close()
+
 def plot_spectrograms(y, sr, file_name, output_dir):
     """
     Generates and plots STFT spectrogram, Mel spectrogram, and MFCCs.

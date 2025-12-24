@@ -7,7 +7,7 @@ from tqdm import tqdm
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from audio_processor import process_audio_file
-from visualizer import save_mel_spectrogram
+from visualizer import save_clean_spectrogram
 
 def main():
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -60,12 +60,11 @@ def main():
                         # 1. Save processed audio
                         sf.write(wav_output_path, y, sr)
                         
-                        # 2. Generate and Save Mel Spectrogram
-                        save_mel_spectrogram(
+                        # 2. Generate and Save Mel Spectrogram (Clean version for CNN)
+                        save_clean_spectrogram(
                             y, 
                             sr, 
-                            spec_output_path, 
-                            title=f"Mel Spectrogram (Amp) - {file}"
+                            spec_output_path
                         )
                         
                         processed_count += 1
