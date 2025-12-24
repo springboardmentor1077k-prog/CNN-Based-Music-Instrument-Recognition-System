@@ -6,3 +6,6 @@ soundfile
 tqdm
 notebook
 ipykernel
+tensorflow
+pandas
+seaborn
