@@ -1,0 +1,6 @@
+Task 10 – Improved CNN Model
+
+In this task, the baseline CNN model from Task 9 was improved by increasing the depth of the network and adding Batch Normalization and Dropout layers. 
+Additional convolution layers were introduced with gradually increasing filters (32, 64, 128).
+Dropout was applied to reduce overfitting (0.1–0.2 in convolution layers and 0.4 in the dense layer). The model was retrained using the same dataset for fair comparison.
+Compared to the baseline model, the improved CNN shows a reduced overfitting gap and smoother training and validation curves, indicating better generalization performance.
