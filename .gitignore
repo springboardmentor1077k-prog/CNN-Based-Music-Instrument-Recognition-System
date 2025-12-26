@@ -10,5 +10,6 @@ venv/
 # Project specific
 datasets/
 outputs/
+logs/
 *.zip
 *.log
