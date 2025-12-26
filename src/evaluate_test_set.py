@@ -10,7 +10,7 @@ from tqdm import tqdm
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from audio_processor import process_audio_file
-from visualizer import save_mel_spectrogram
+from visualizer import save_clean_spectrogram
 
 def load_true_labels(txt_path):
     """Reads the label file and returns a list of instrument codes."""
@@ -94,7 +94,7 @@ def main():
             
         # 3. Generate Spectrogram Image (Identical to training pipeline)
         try:
-            save_mel_spectrogram(y, sr, TEMP_IMG_PATH, title=f"Mel Spectrogram (Amp) - {wav_file}")
+            save_clean_spectrogram(y, sr, TEMP_IMG_PATH)
         except Exception as e:
             print(f"Error generating spectrogram for {wav_file}: {e}")
             errors += 1
