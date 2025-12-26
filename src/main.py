@@ -14,6 +14,9 @@ def main():
     DATASET_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TrainingData")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
     
+    # Ensure output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
     # Test file
     # Using a specific file known to exist from previous steps or exploration
     test_file_rel_path = os.path.join("cel", "[cel][cla]0001__1.wav")

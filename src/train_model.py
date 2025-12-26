@@ -11,6 +11,9 @@ def main():
     DATA_DIR = os.path.join(PROJECT_ROOT, "outputs", "mel_spectrograms_irmas")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
     
+    # Ensure output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
     # Ensure data exists
     if not os.path.exists(DATA_DIR):
         print(f"Data directory not found: {DATA_DIR}")

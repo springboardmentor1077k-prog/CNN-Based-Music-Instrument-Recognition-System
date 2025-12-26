@@ -23,6 +23,7 @@ FILE_PATHS = {
 }
 
 def compare_instruments():
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     print("Starting instrument comparison visualization...")
     
     # 11 instruments, 2 columns (STFT, Mel)

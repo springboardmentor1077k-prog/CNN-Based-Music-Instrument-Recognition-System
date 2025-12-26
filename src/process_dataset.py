@@ -24,6 +24,10 @@ def main():
         print("Dataset directory not found!")
         return
 
+    # Create root output directories first to avoid potential race conditions or path errors
+    os.makedirs(OUTPUT_WAV_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_SPEC_DIR, exist_ok=True)
+
     # Count total files for progress bar
     total_files = sum([len(files) for r, d, files in os.walk(DATASET_DIR) if any(f.endswith('.wav') for f in files)])
     
@@ -37,6 +41,10 @@ def main():
                 continue
             
             class_name = os.path.basename(root)
+
+            # Skip hidden directories (like .ipynb_checkpoints) or system folders
+            if class_name.startswith('.') or class_name.startswith('_'):
+                continue
             
             # Create class subdirectories
             wav_class_dir = os.path.join(OUTPUT_WAV_DIR, class_name)
