@@ -58,16 +58,26 @@ class ModelTrainer:
 
         self.model = models.Sequential([
             layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)),
+            
             layers.Conv2D(16, 3, padding='same', activation='relu'),
+            layers.BatchNormalization(),
             layers.MaxPooling2D(),
+            
             layers.Conv2D(32, 3, padding='same', activation='relu'),
+            layers.BatchNormalization(),
             layers.MaxPooling2D(),
+            
             layers.Conv2D(64, 3, padding='same', activation='relu'),
+            layers.BatchNormalization(),
             layers.MaxPooling2D(),
-            layers.Dropout(0.2), # Add dropout
+            
+            layers.Dropout(0.2),
             layers.Flatten(),
+            
             layers.Dense(128, activation='relu'),
-            layers.Dropout(0.2), # Add dropout
+            layers.BatchNormalization(),
+            layers.Dropout(0.2),
+            
             layers.Dense(num_classes) # No activation here, will use from_logits=True in loss
         ])
 
