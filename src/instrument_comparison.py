@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import librosa
 import librosa.display
 import numpy as np
-from audio_processor import process_audio_file
+from audio_preprocessor import process_audio_file
 
 # Define paths
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -49,11 +49,11 @@
     To process the entire IRMAS dataset (Normalize, Trim, Pad to 3s) and generate Mel Spectrograms:
 
     ```bash
-    python3 src/process_dataset.py
+    python3 src/preprocessing.py
     ```
 
-    - Processed Audio (WAV): `outputs/processed_irmas/`
-    - Mel Spectrograms (PNG): `outputs/mel_spectrograms_irmas/`
+    - Processed Audio (WAV): `datasets/IRMAS-ProcessedTrainingData/audio/`
+    - Mel Spectrograms (PNG): `datasets/IRMAS-ProcessedTrainingData/spectrograms/`
 
 4. **Run Instrument Comparison Visualization:**
     To generate a visual comparison of STFT and Mel-spectrograms for different instruments:

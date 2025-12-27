@@ -9,7 +9,7 @@ from tqdm import tqdm
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from audio_processor import process_audio_file
+from audio_preprocessor import process_audio_file
 from visualizer import save_clean_spectrogram
 
 def load_true_labels(txt_path):

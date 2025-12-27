@@ -6,7 +6,7 @@ import matplotlib.image as mpimg
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from audio_processor import process_audio_file
+from audio_preprocessor import process_audio_file
 from visualizer import save_mel_spectrogram
 
 def main():
@@ -16,7 +16,7 @@ def main():
     # Source Audio
     AUDIO_PATH = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TrainingData", "cel", "008__[cel][nod][cla]0058__1.wav")
     # Existing Training Image (Ground Truth for what the model expects)
-    TRAIN_IMG_PATH = os.path.join(PROJECT_ROOT, "outputs", "mel_spectrograms_irmas", "cel", "008__[cel][nod][cla]0058__1.png")
+    TRAIN_IMG_PATH = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "spectrograms", "cel", "008__[cel][nod][cla]0058__1.png")
     # New Inference Image (What we are generating now)
     DEBUG_IMG_PATH = os.path.join(PROJECT_ROOT, "outputs", "debug_inference_spec.png")
     

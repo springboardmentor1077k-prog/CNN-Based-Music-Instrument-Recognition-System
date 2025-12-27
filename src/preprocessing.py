@@ -6,14 +6,16 @@ from tqdm import tqdm
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from audio_processor import process_audio_file, add_noise, pitch_shift, adjust_volume, time_shift
+from audio_preprocessor import process_audio_file
+from augmentation import add_noise, pitch_shift, adjust_volume, time_shift
 from visualizer import save_clean_spectrogram
 
 def main():
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATASET_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TrainingData")
-    OUTPUT_WAV_DIR = os.path.join(PROJECT_ROOT, "outputs", "processed_irmas")
-    OUTPUT_SPEC_DIR = os.path.join(PROJECT_ROOT, "outputs", "mel_spectrograms_irmas")
+    PROCESSED_ROOT = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData")
+    OUTPUT_WAV_DIR = os.path.join(PROCESSED_ROOT, "audio")
+    OUTPUT_SPEC_DIR = os.path.join(PROCESSED_ROOT, "spectrograms")
     
     print(f"Starting processing pipeline...")
     print(f"Input Directory: {DATASET_DIR}")

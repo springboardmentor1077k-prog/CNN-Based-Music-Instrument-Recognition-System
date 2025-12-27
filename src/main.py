@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # Add src to path so we can import modules if running from root
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.audio_processor import process_audio_file
+from src.audio_preprocessor import process_audio_file
 from src.visualizer import plot_spectrograms
 
 def main():

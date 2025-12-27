@@ -8,7 +8,7 @@ from src.model_trainer import ModelTrainer
 
 def main():
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DATA_DIR = os.path.join(PROJECT_ROOT, "outputs", "mel_spectrograms_irmas")
+    DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "spectrograms")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
     
     # Ensure output directory exists

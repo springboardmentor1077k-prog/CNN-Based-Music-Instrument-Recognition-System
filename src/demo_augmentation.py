@@ -2,7 +2,8 @@ import os
 import random
 import soundfile as sf
 import numpy as np
-import audio_processor as ap
+import audio_preprocessor as ap
+import augmentation as aug
 import matplotlib.pyplot as plt
 import librosa
 import librosa.display
@@ -80,7 +81,7 @@ def run_augmentation_demo():
         title_list = ["Original"]
         
         # 1. Add Noise
-        y_noise = ap.add_noise(y, noise_level=0.02)
+        y_noise = aug.add_noise(y, noise_level=0.02)
         noise_path = os.path.join(OUTPUT_DIR, f"{base_name}_noise.wav")
         sf.write(noise_path, y_noise, sr)
         print(f"  Saved (Noise): {noise_path}")
@@ -89,7 +90,7 @@ def run_augmentation_demo():
         
         # 2. Time Stretch (Speed up by 1.2x)
         # Note: Time stretch changes duration.
-        y_stretch = ap.time_stretch(y, rate=1.2)
+        y_stretch = aug.time_stretch(y, rate=1.2)
         stretch_path = os.path.join(OUTPUT_DIR, f"{base_name}_stretch.wav")
         sf.write(stretch_path, y_stretch, sr)
         print(f"  Saved (Time Stretch 1.2x): {stretch_path}")
@@ -97,7 +98,7 @@ def run_augmentation_demo():
         title_list.append("Time Stretch (1.2x)")
         
         # 3. Pitch Shift (Up by 4 semitones)
-        y_shift = ap.pitch_shift(y, sr, n_steps=4)
+        y_shift = aug.pitch_shift(y, sr, n_steps=4)
         shift_path = os.path.join(OUTPUT_DIR, f"{base_name}_pitch_shift.wav")
         sf.write(shift_path, y_shift, sr)
         print(f"  Saved (Pitch Shift +4): {shift_path}")
