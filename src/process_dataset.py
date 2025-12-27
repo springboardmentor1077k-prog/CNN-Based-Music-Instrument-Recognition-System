@@ -6,7 +6,7 @@ from tqdm import tqdm
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from audio_processor import process_audio_file
+from audio_processor import process_audio_file, add_noise, pitch_shift, adjust_volume, time_shift
 from visualizer import save_clean_spectrogram
 
 def main():
@@ -57,24 +57,36 @@ def main():
                 if file.endswith('.wav'):
                     input_path = os.path.join(root, file)
                     
-                    # Output paths
-                    wav_output_path = os.path.join(wav_class_dir, file)
-                    spec_output_path = os.path.join(spec_class_dir, file.replace('.wav', '.png'))
+                    # Base filename without extension
+                    base_name = os.path.splitext(file)[0]
 
-                    # Process Audio
+                    # Process Audio (Base Version)
                     y, sr = process_audio_file(input_path, target_sr=16000, duration=3.0)
 
                     if y is not None:
-                        # 1. Save processed audio
-                        sf.write(wav_output_path, y, sr)
+                        # Define variations: (suffix, audio_data)
+                        variations = [
+                            ("", y),  # Original
+                            ("_noise", add_noise(y, noise_level=0.01)),  # Noise Injection
+                            ("_pitch", pitch_shift(y, sr, n_steps=2)),   # Pitch Shift (+2 semitones)
+                            ("_vol", adjust_volume(y, factor=0.8)),      # Volume Adjustment (0.8x)
+                            ("_shift", time_shift(y, sr, shift_max=0.5)) # Time Shift (Rolling)
+                        ]
                         
-                        # 2. Generate and Save Mel Spectrogram (Clean version for CNN)
-                        save_clean_spectrogram(
-                            y, 
-                            sr, 
-                            spec_output_path
-                        )
-                        
+                        for suffix, y_var in variations:
+                            # Construct paths
+                            wav_name = f"{base_name}{suffix}.wav"
+                            png_name = f"{base_name}{suffix}.png"
+                            
+                            wav_path = os.path.join(wav_class_dir, wav_name)
+                            spec_path = os.path.join(spec_class_dir, png_name)
+                            
+                            # 1. Save Audio
+                            sf.write(wav_path, y_var, sr)
+                            
+                            # 2. Save Spectrogram
+                            save_clean_spectrogram(y_var, sr, spec_path)
+
                         processed_count += 1
                     else:
                         failed_count += 1
