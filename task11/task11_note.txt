@@ -1,0 +1,20 @@
+In this task, the trained CNN model was evaluated using both single-label and multi-label classification 
+strategies to comprehensively analyze its performance. Initially, the model was evaluated in a 
+single-label setting to compute prediction outputs, confusion matrices, and standard performance metrics 
+such as accuracy, precision, recall, and F1-score.
+
+Subsequently, the evaluation was extended to a multi-label classification framework, where each audio 
+sample may contain multiple instruments simultaneously. Predicted probabilities were converted into 
+binary multi-label outputs using thresholding, enabling the detection of multiple instruments within 
+a single audio track. Detailed classification reports and confusion matrices were generated to assess 
+class-wise and overall performance.
+
+As part of advanced evaluation, Receiver Operating Characteristic (ROC) curves were plotted and Area 
+Under the Curve (AUC) scores were computed to measure the model’s discriminative capability. A separate 
+evaluation script was used to calculate micro-averaged ROC curves and AUC scores, providing a robust 
+assessment of performance across all instrument classes in the multi-label setting.
+
+All evaluation artifacts, including prediction probabilities, binary predictions, ground truth labels, 
+confusion matrices, metric summaries, ROC plots, and AUC scores, were saved in the outputs directory. 
+This task completes the evaluation phase of the CNN-Based Music Instrument Recognition System by 
+validating both single-instrument and multi-instrument recognition performance.
