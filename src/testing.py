@@ -84,47 +84,76 @@ def main():
             skipped_multi_label += 1 # Treating as skip
             continue
 
-        # 2. Process Audio
-        # Use same parameters as training: 16kHz, 3.0s
-        y, sr = process_audio_file(file_path, target_sr=16000, duration=3.0)
-        
-        if y is None:
-            errors += 1
-            continue
-            
-        # 3. Generate Spectrogram Image (Identical to training pipeline)
+        # 2. Process Audio (Sliding Window Approach)
+        # Load the full audio first
+        # We need to manually load and slice because process_audio_file does automatic cropping
+        import librosa
         try:
-            save_clean_spectrogram(y, sr, TEMP_IMG_PATH)
+            # Load full audio at 16kHz
+            y_full, sr = librosa.load(file_path, sr=16000, mono=True)
         except Exception as e:
-            print(f"Error generating spectrogram for {wav_file}: {e}")
+            print(f"Error loading audio {wav_file}: {e}")
             errors += 1
             continue
-            
-        # 4. Load Image & Preprocess for Model
-        try:
-            # Target size must match training (128x128)
-            img = image.load_img(TEMP_IMG_PATH, target_size=(128, 128))
-            img_array = image.img_to_array(img)
-            img_array = tf.expand_dims(img_array, 0) # Create batch axis
-            
-            # CRITICAL: Rescaling (1./255). 
-            # Note: In src/model_trainer.py, layers.Rescaling(1./255) is the FIRST layer of the model.
-            # So we do NOT need to divide by 255 here manually if the model handles it.
-            # Let's check model_trainer.py again... 
-            # Yes: layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)) is inside the model.
-            # However, image_dataset_from_directory usually loads as float32 [0-255] or uint8 [0-255].
-            # image.img_to_array returns float32 [0-255].
-            # So passing [0-255] is correct because the model's first layer scales it.
-            
-        except Exception as e:
-            print(f"Error processing image for {wav_file}: {e}")
-            errors += 1
-            continue
+
+        # Define window parameters
+        window_size = int(3.0 * sr)  # 3 seconds
+        stride = int(1.5 * sr)       # 1.5 seconds overlap
         
-        # 5. Predict
-        predictions = model.predict(img_array, verbose=0)
-        predicted_index = np.argmax(predictions)
+        # If audio is shorter than 3s, pad it once and use as single window
+        if len(y_full) < window_size:
+            pad_width = window_size - len(y_full)
+            y_window = np.pad(y_full, (0, pad_width), mode='constant')
+            windows = [y_window]
+        else:
+            # Slice into windows
+            windows = []
+            for start in range(0, len(y_full) - window_size + 1, stride):
+                end = start + window_size
+                windows.append(y_full[start:end])
+            
+            # Handle the last bit if we have leftovers significant enough? 
+            # Ideally we just take what fits. If we have no windows (rare edge case), take the center.
+            if not windows:
+                # Fallback: Center crop
+                start = (len(y_full) - window_size) // 2
+                windows = [y_full[start:start+window_size]]
+
+        # 3. Batch Prediction
+        batch_images = []
+        
+        for y_window in windows:
+            try:
+                # Generate Spectrogram for this window
+                save_clean_spectrogram(y_window, sr, TEMP_IMG_PATH)
+                
+                # Load & Preprocess
+                img = image.load_img(TEMP_IMG_PATH, target_size=(128, 128))
+                img_array = image.img_to_array(img)
+                batch_images.append(img_array)
+                
+            except Exception as e:
+                # Skip bad windows
+                continue
+        
+        if not batch_images:
+            errors += 1
+            continue
+            
+        # Stack all windows into one batch: shape (N_windows, 128, 128, 3)
+        batch_tensor = np.array(batch_images)
+        
+        # Predict on the whole batch at once
+        predictions = model.predict(batch_tensor, verbose=0)
+        
+        # 4. Soft Voting (Average the probabilities)
+        # predictions shape: (N_windows, 11)
+        avg_prediction = np.mean(predictions, axis=0)
+        
+        predicted_index = np.argmax(avg_prediction)
         predicted_label = CLASS_NAMES[predicted_index]
+        
+        # 5. Check Correctness
         
         # 6. Check Correctness
         if predicted_label == true_label:
