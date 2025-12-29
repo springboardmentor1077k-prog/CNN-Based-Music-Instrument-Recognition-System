@@ -9,3 +9,4 @@ ipykernel
 tensorflow
 pandas
 seaborn
+scikit-learn
