@@ -93,6 +93,12 @@ X_train, X_val, y_train, y_val = train_test_split(
 )
 
 # -------------------------
+# Save validation data (for Task 11)
+# -------------------------
+np.save(os.path.join(OUTPUT_DIR, "X_val.npy"), X_val)
+np.save(os.path.join(OUTPUT_DIR, "y_val.npy"), y_val)
+
+# -------------------------
 # CNN model (OWN DESIGN)
 # -------------------------
 model = Sequential([
