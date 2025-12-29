@@ -8,19 +8,20 @@ from src.model_trainer import ModelTrainer
 
 def main():
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "spectrograms")
+    TRAIN_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "train", "spectrograms")
+    VAL_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "validation", "spectrograms")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
     
     # Ensure output directory exists
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     
     # Ensure data exists
-    if not os.path.exists(DATA_DIR):
-        print(f"Data directory not found: {DATA_DIR}")
+    if not os.path.exists(TRAIN_DIR) or not os.path.exists(VAL_DIR):
+        print(f"Data directories not found.\nTrain: {TRAIN_DIR}\nVal: {VAL_DIR}")
         exit(1)
 
     print("--- Starting Task 8: Model Training ---")
-    trainer = ModelTrainer(DATA_DIR, batch_size=32)
+    trainer = ModelTrainer(TRAIN_DIR, VAL_DIR, batch_size=32)
     trainer.load_data()
     trainer.build_model()
     

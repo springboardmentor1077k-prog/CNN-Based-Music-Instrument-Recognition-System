@@ -10,12 +10,12 @@ from sklearn.metrics import confusion_matrix, classification_report
 
 
 class ModelTrainer:
-    def __init__(self, data_dir, img_height=128, img_width=128, batch_size=32, validation_split=0.2):
-        self.data_dir = data_dir
+    def __init__(self, train_dir, val_dir, img_height=128, img_width=128, batch_size=32):
+        self.train_dir = train_dir
+        self.val_dir = val_dir
         self.img_height = img_height
         self.img_width = img_width
         self.batch_size = batch_size
-        self.validation_split = validation_split
         self.train_ds = None
         self.val_ds = None
         self.class_names = None
@@ -25,24 +25,22 @@ class ModelTrainer:
     def load_data(self):
         print("Loading training dataset...")
         self.train_ds = tf.keras.utils.image_dataset_from_directory(
-            self.data_dir,
-            validation_split=self.validation_split,
-            subset="training",
+            self.train_dir,
             seed=123,
             image_size=(self.img_height, self.img_width),
             batch_size=self.batch_size,
-            color_mode='rgb' # Spectrograms saved as colored PNGs by matplotlib usually
+            color_mode='rgb',
+            shuffle=True
         )
         
         print("Loading validation dataset...")
         self.val_ds = tf.keras.utils.image_dataset_from_directory(
-            self.data_dir,
-            validation_split=self.validation_split,
-            subset="validation",
+            self.val_dir,
             seed=123,
             image_size=(self.img_height, self.img_width),
             batch_size=self.batch_size,
-            color_mode='rgb'
+            color_mode='rgb',
+            shuffle=False
         )
 
         self.class_names = self.train_ds.class_names
@@ -94,15 +92,24 @@ class ModelTrainer:
 
         print(f"Starting training for {epochs} epochs...")
         
-        # Add TensorBoard callback
+        # Callbacks
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+        
+        # Learning Rate Scheduler
+        lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(
+            monitor='val_loss', 
+            factor=0.2, 
+            patience=3, 
+            min_lr=1e-6,
+            verbose=1
+        )
 
         self.history = self.model.fit(
             self.train_ds,
             validation_data=self.val_ds,
             epochs=epochs,
-            callbacks=[tensorboard_callback]
+            callbacks=[tensorboard_callback, lr_scheduler]
         )
         return self.history
 
@@ -187,15 +194,16 @@ class ModelTrainer:
 if __name__ == "__main__":
     # Example usage (Task 7 verification)
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "spectrograms")
+    TRAIN_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "train", "spectrograms")
+    VAL_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "validation", "spectrograms")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
     
     # Ensure data exists
-    if not os.path.exists(DATA_DIR):
-        print(f"Data directory not found: {DATA_DIR}")
+    if not os.path.exists(TRAIN_DIR) or not os.path.exists(VAL_DIR):
+        print(f"Data directories not found.\nTrain: {TRAIN_DIR}\nVal: {VAL_DIR}")
         exit(1)
 
-    trainer = ModelTrainer(DATA_DIR, batch_size=32)
+    trainer = ModelTrainer(TRAIN_DIR, VAL_DIR, batch_size=32)
     trainer.load_data()
     trainer.build_model()
     # Train for a few epochs to verify pipeline

@@ -5,55 +5,45 @@
 ## Project Status
 
 - **Phase:** Active Development
-- **Current Focus:** Model Training Preparation
+- **Current Focus:** Model Evaluation & Optimization (Task 10)
 - **Dataset:** [IRMAS (Instrument Recognition in Musical Audio Signals)](https://www.upf.edu/web/mtg/irmas)
 
 ## Recent Progress
-*   **Task 6 (Completed):** Implemented audio augmentation (Noise, Time Stretch, Pitch Shift) and visualization.
-*   **Task 5 (Completed):** Created project demo notebook.
-*   **Task 4 (Completed):** Finalized preprocessing pipeline.
+*   **Task 10 (In Progress):** Fixed critical Data Leakage; refactored pipeline to "Split-First, Augment-Second". Integrated `ReduceLROnPlateau` for training stability.
+*   **Task 9 (Completed):** Performed initial robust training on 5x augmented dataset. Identified 64% real accuracy vs 89% leaked accuracy.
+*   **Task 8 (Completed):** Initial CNN training and evaluation.
+*   **Task 7 (Completed):** Designed and implemented the CNN architecture (`ModelTrainer`).
 
 ## Structure
 
-- `src/`: Source code for audio processing and modeling.
-- `datasets/`: Contains the IRMAS training data.
-- `docs/`: Documentation and task reports.
-- `outputs/`: Generated plots and logs.
-- `tasks/`: Task tracking.
+- `src/`: Source code for audio processing, modeling, and evaluation.
+- `datasets/`: Raw and processed IRMAS data.
+- `docs/`: Technical reports for each development task.
+- `outputs/`: Trained models, metrics, and visualization plots.
 
 ## Setup & Usage
 
 1. **Environment:**
-    Activate the Conda environment:
-
-    ```bash
-    conda activate instrunet_env
-    ```
-
-    Then install dependencies:
-
     ```bash
     pip install -r requirements.txt
     ```
 
-2. **Run Audio Augmentation Demo (New):**
-    To generate augmented audio samples and comparison spectrograms:
-
-    ```bash
-    python3 src/demo_augmentation.py
-    ```
-    
-    - Results: `outputs/augmented_samples/`
-
-3. **Run Dataset Preprocessing:**
-    To process the entire IRMAS dataset (Normalize, Trim, Pad to 3s) and generate Mel Spectrograms:
+2. **Run Dataset Preprocessing (Updated):**
+    Processes the IRMAS dataset using a **Split-First** strategy (80/20) to prevent data leakage. Augmentation is applied only to the training set.
 
     ```bash
     python3 src/preprocessing.py
     ```
 
-    - Processed Audio (WAV): `datasets/IRMAS-ProcessedTrainingData/audio/`
-    - Mel Spectrograms (PNG): `datasets/IRMAS-ProcessedTrainingData/spectrograms/`
+    - **Train Data:** `datasets/IRMAS-ProcessedTrainingData/train/spectrograms/`
+    - **Val Data:** `datasets/IRMAS-ProcessedTrainingData/validation/spectrograms/`
+
+3. **Run Model Training:**
+    Trains the CNN using the processed train/val splits.
+
+    ```bash
+    python3 src/training.py
+    ```
 
 4. **Run Instrument Comparison Visualization:**
     To generate a visual comparison of STFT and Mel-spectrograms for different instruments:
