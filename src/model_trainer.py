@@ -1,6 +1,6 @@
 import os
 import tensorflow as tf
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models, regularizers
 import matplotlib.pyplot as plt
 import pandas as pd
 import datetime
@@ -51,7 +51,7 @@ class ModelTrainer:
         self.train_ds = self.train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
         self.val_ds = self.val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
-    def build_model(self):
+    def build_model(self, dropout_rate=0.5, l2_rate=0.001):
         num_classes = len(self.class_names)
 
         self.model = models.Sequential([
@@ -69,12 +69,12 @@ class ModelTrainer:
             layers.BatchNormalization(),
             layers.MaxPooling2D(),
             
-            layers.Dropout(0.2),
-            layers.Flatten(),
+            layers.Dropout(dropout_rate),
+            layers.GlobalAveragePooling2D(),
             
-            layers.Dense(128, activation='relu'),
+            layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(l2_rate)),
             layers.BatchNormalization(),
-            layers.Dropout(0.2),
+            layers.Dropout(dropout_rate),
             
             layers.Dense(num_classes) # No activation here, will use from_logits=True in loss
         ])
@@ -105,11 +105,19 @@ class ModelTrainer:
             verbose=1
         )
 
+        # Early Stopping
+        early_stopping = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            patience=5,
+            restore_best_weights=True,
+            verbose=1
+        )
+
         self.history = self.model.fit(
             self.train_ds,
             validation_data=self.val_ds,
             epochs=epochs,
-            callbacks=[tensorboard_callback, lr_scheduler]
+            callbacks=[tensorboard_callback, lr_scheduler, early_stopping]
         )
         return self.history
 

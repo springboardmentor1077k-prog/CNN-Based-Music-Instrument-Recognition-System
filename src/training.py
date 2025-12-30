@@ -23,10 +23,13 @@ def main():
     print("--- Starting Task 8: Model Training ---")
     trainer = ModelTrainer(TRAIN_DIR, VAL_DIR, batch_size=32)
     trainer.load_data()
-    trainer.build_model()
     
-    # Train for 20 epochs
-    trainer.train(epochs=20)
+    # Updated: Using higher dropout and L2 regularization to combat overfitting
+    print("Building model with Dropout=0.5 and L2=0.001...")
+    trainer.build_model(dropout_rate=0.5, l2_rate=0.001)
+    
+    # Train for 50 epochs (Early Stopping will handle termination)
+    trainer.train(epochs=50)
     
     # Plot History
     trainer.plot_history(OUTPUT_DIR)
