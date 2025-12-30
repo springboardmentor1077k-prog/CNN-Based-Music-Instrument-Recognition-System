@@ -1,0 +1,103 @@
+Learning Rate Experiment (Controlled Test on 2 Audio Samples)
+📌 Objective
+
+The goal of this experiment is to analyze the effect of learning rate on model behavior using a controlled setup with only two audio samples.
+By keeping all other parameters constant and changing only the learning rate, we observe how it impacts prediction confidence and stability.
+
+🧪 Experimental Setup
+
+Model: CNN for Mel-Spectrogram Classification
+
+Task: Binary classification
+
+clean
+
+augmented
+
+Dataset Size: 2 samples only
+
+pipeline/mel/test/87.png → clean
+
+pipeline/mel/train/19_aug1.png → augmented
+
+Optimizer: Adam
+
+Epochs: Very few (intentionally, to highlight behavior)
+
+Variable Tested: Learning Rate
+
+🔁 Experiments Performed
+
+Two experiments were conducted:
+
+🔹 Experiment 1: High Learning Rate
+Learning Rate = 0.001
+
+🔹 Experiment 2: Low Learning Rate
+Learning Rate = 0.0001
+
+
+All other parameters (model architecture, data, preprocessing) remained unchanged.
+
+📊 Results
+🔴 Learning Rate = 0.001
+pipeline/mel/test/87.png  → probs = [0.9999986 , 0.0000014]
+pipeline/mel/train/19_aug1.png → probs = [0.2667 , 0.7332]
+
+
+Observations
+
+Extremely high confidence predictions
+
+Almost 100% certainty for one class
+
+Indicates overfitting on very small data
+
+Model learns too aggressively
+
+🟢 Learning Rate = 0.0001
+pipeline/mel/test/87.png  → probs = [0.7557 , 0.2443]
+pipeline/mel/train/19_aug1.png → probs = [0.4763 , 0.5237]
+
+
+Observations
+
+Smoother probability distribution
+
+Reduced overconfidence
+
+More realistic predictions
+
+Better numerical stability
+
+⚖️ Comparison Summary
+Aspect	LR = 0.001	LR = 0.0001
+Learning Speed	Very fast	Slower
+Confidence	Extremely high	Moderate
+Stability	Low	High
+Overfitting Risk	High	Low
+Generalization	Poor	Better
+✅ Final Decision
+✔ Chosen Learning Rate:
+0.0001
+
+❌ Rejected Learning Rate:
+0.001
+
+🧠 Justification (Important)
+
+Using a high learning rate (0.001) causes the model to update weights too aggressively, leading to overconfident predictions, especially when trained on a very small dataset. This behavior increases the risk of overfitting and poor generalization.
+
+Reducing the learning rate to 0.0001 results in more stable learning, smoother probability outputs, and better-calibrated predictions. Therefore, the lower learning rate is more suitable and was selected.
+
+📌 Conclusion
+
+This experiment demonstrates that:
+
+Learning rate significantly affects model behavior
+
+High learning rates can give misleading confidence
+
+Lower learning rates improve stability and reliability
+
+The controlled two-sample setup clearly highlights why learning rate tuning is critical in deep learning models.
