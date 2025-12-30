@@ -51,7 +51,7 @@ def plot_roc_curve(y_true_bin, y_score, class_names, output_dir):
 
 def main():
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "spectrograms")
+    DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "validation", "spectrograms")
     MODEL_PATH = os.path.join(PROJECT_ROOT, "outputs", "instrunet_cnn.keras")
     OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
     
@@ -66,10 +66,9 @@ def main():
     # 2. Load Validation Data
     print("Loading validation dataset...")
     # We use same parameters as training to ensure consistency
+    # Data is already pre-split into 'validation' folder by preprocessing.py
     val_ds = tf.keras.utils.image_dataset_from_directory(
         DATA_DIR,
-        validation_split=0.2,
-        subset="validation",
         seed=123,
         image_size=(128, 128),
         batch_size=32,
