@@ -45,7 +45,18 @@
     python3 src/training.py
     ```
 
-4. **Run Instrument Comparison Visualization:**
+4. **HPC Execution (Docker/Singularity):**
+    The project is optimized for High-Performance Computing environments.
+    
+    - **Instructions:** See `docs/hpc_instructions.md` for full guide.
+    - **Features:** Headless plotting, CLI arguments, and pre-built Dockerfile.
+    
+    ```bash
+    # Example Singularity Command
+    singularity exec --nv --bind .:/app instrunet_ai.sif python src/training.py --epochs 50
+    ```
+
+5. **Run Instrument Comparison Visualization:**
     To generate a visual comparison of STFT and Mel-spectrograms for different instruments:
 
     ```bash

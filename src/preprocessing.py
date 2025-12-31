@@ -1,5 +1,10 @@
 import os
 import sys
+import argparse
+
+# Fix for Numba/Librosa permission issue in Docker (non-root)
+os.environ['NUMBA_CACHE_DIR'] = '/tmp'
+
 import soundfile as sf
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
@@ -12,9 +17,23 @@ from augmentation import add_noise, pitch_shift, adjust_volume, time_shift
 from visualizer import save_clean_spectrogram
 
 def main():
+    parser = argparse.ArgumentParser(description="Preprocess IRMAS dataset with Split-First strategy")
+    parser.add_argument("--input_dir", type=str, default=None, help="Path to raw IRMAS-TrainingData")
+    parser.add_argument("--output_dir", type=str, default=None, help="Path to save processed data")
+    args = parser.parse_args()
+
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DATASET_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TrainingData")
-    PROCESSED_ROOT = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData")
+    
+    # Resolve Paths
+    if args.input_dir:
+        DATASET_DIR = args.input_dir
+    else:
+        DATASET_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TrainingData")
+        
+    if args.output_dir:
+        PROCESSED_ROOT = args.output_dir
+    else:
+        PROCESSED_ROOT = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData")
     
     # Define Train/Val Split Directories
     TRAIN_AUDIO_DIR = os.path.join(PROCESSED_ROOT, "train", "audio")

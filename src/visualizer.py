@@ -1,5 +1,7 @@
 import librosa
 import librosa.display
+import matplotlib
+matplotlib.use('Agg')  # Required for headless plotting on HPC
 import matplotlib.pyplot as plt
 import numpy as np
 import os

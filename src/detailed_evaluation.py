@@ -1,8 +1,14 @@
 import os
 import sys
+
+# Fix for Numba/Librosa permission issue in Docker (non-root)
+os.environ['NUMBA_CACHE_DIR'] = '/tmp'
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
+import matplotlib
+matplotlib.use('Agg')  # Required for headless plotting on HPC
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -50,14 +56,37 @@ def plot_roc_curve(y_true_bin, y_score, class_names, output_dir):
     print(f"ROC curves saved to {roc_path}")
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Detailed Evaluation of InstruNet AI")
+    parser.add_argument("--data_dir", type=str, default=None, help="Path to validation spectrograms")
+    parser.add_argument("--model_path", type=str, default=None, help="Path to the trained model")
+    parser.add_argument("--output_dir", type=str, default=None, help="Directory to save evaluation results")
+    args = parser.parse_args()
+
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "validation", "spectrograms")
-    MODEL_PATH = os.path.join(PROJECT_ROOT, "outputs", "instrunet_cnn.keras")
-    OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
+    
+    # Resolve Paths
+    if args.data_dir:
+        DATA_DIR = args.data_dir
+    else:
+        DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-ProcessedTrainingData", "validation", "spectrograms")
+        
+    if args.model_path:
+        MODEL_PATH = args.model_path
+    else:
+        MODEL_PATH = os.path.join(PROJECT_ROOT, "outputs", "instrunet_cnn.keras")
+        
+    if args.output_dir:
+        OUTPUT_DIR = args.output_dir
+    else:
+        OUTPUT_DIR = os.path.join(PROJECT_ROOT, "outputs")
     
     if not os.path.exists(MODEL_PATH):
         print(f"Error: Model not found at {MODEL_PATH}")
         return
+
+    # Ensure output directory exists
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     # 1. Load Model
     print("Loading model...")

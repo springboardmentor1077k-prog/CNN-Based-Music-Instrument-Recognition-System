@@ -4,6 +4,8 @@ import soundfile as sf
 import numpy as np
 import audio_preprocessor as ap
 import augmentation as aug
+import matplotlib
+matplotlib.use('Agg')  # Required for headless plotting on HPC
 import matplotlib.pyplot as plt
 import librosa
 import librosa.display

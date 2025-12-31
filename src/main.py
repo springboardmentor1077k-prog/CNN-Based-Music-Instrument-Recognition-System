@@ -1,5 +1,7 @@
 import os
 import sys
+import matplotlib
+matplotlib.use('Agg')  # Required for headless plotting on HPC
 import matplotlib.pyplot as plt
 
 # Add src to path so we can import modules if running from root

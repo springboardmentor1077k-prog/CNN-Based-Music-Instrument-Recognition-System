@@ -1,5 +1,10 @@
 import os
 import sys
+import argparse
+
+# Fix for Numba/Librosa permission issue in Docker (non-root)
+os.environ['NUMBA_CACHE_DIR'] = '/tmp'
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -23,10 +28,29 @@ def load_true_labels(txt_path):
     return labels
 
 def main():
+    parser = argparse.ArgumentParser(description="Evaluate InstruNet AI on IRMAS Test Set")
+    parser.add_argument("--test_dir", type=str, default=None, help="Path to IRMAS-TestingData")
+    parser.add_argument("--model_path", type=str, default=None, help="Path to the trained .keras model")
+    parser.add_argument("--output_dir", type=str, default=None, help="Directory for temp images")
+    args = parser.parse_args()
+
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    TEST_DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TestingData")
-    MODEL_PATH = os.path.join(PROJECT_ROOT, "outputs", "instrunet_cnn.keras")
-    TEMP_IMG_PATH = os.path.join(PROJECT_ROOT, "outputs", "temp_inference_spec.png")
+    
+    # Resolve Paths
+    if args.test_dir:
+        TEST_DATA_DIR = args.test_dir
+    else:
+        TEST_DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TestingData")
+        
+    if args.model_path:
+        MODEL_PATH = args.model_path
+    else:
+        MODEL_PATH = os.path.join(PROJECT_ROOT, "outputs", "instrunet_cnn.keras")
+        
+    if args.output_dir:
+        TEMP_IMG_PATH = os.path.join(args.output_dir, "temp_inference_spec.png")
+    else:
+        TEMP_IMG_PATH = os.path.join(PROJECT_ROOT, "outputs", "temp_inference_spec.png")
     
     # Class names from training
     TRAIN_DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TrainingData")

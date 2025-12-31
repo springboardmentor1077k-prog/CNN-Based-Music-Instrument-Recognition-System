@@ -1,6 +1,8 @@
 import os
 import tensorflow as tf
 from tensorflow.keras import layers, models, regularizers
+import matplotlib
+matplotlib.use('Agg')  # Required for headless plotting on HPC
 import matplotlib.pyplot as plt
 import pandas as pd
 import datetime
