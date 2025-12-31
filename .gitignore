@@ -11,5 +11,7 @@ venv/
 datasets/
 outputs/
 logs/
+scripts/
+Makefile
 *.zip
 *.log
