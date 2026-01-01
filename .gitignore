@@ -9,9 +9,8 @@ venv/
 
 # Project specific
 datasets/
-outputs/
 logs/
 scripts/
 Makefile
+*.txt
 *.zip
-*.log

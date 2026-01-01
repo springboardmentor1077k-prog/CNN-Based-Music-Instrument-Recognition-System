@@ -1,0 +1,10 @@
+Starting processing pipeline with Split-First strategy...
+Input Directory: /workspace/datasets/IRMAS-TrainingData
+Train Output: /workspace/datasets/IRMAS-ProcessedTrainingData/train/spectrograms
+Validation Output: /workspace/datasets/IRMAS-ProcessedTrainingData/validation/spectrograms
+Found classes: ['gac', 'gel', 'tru', 'cla', 'org', 'flu', 'sax', 'cel', 'voi', 'vio', 'pia']
+
+Processing Complete.
+Original Files Processed: 6705
+Failed: 0
+Data saved to: /workspace/datasets/IRMAS-ProcessedTrainingData
