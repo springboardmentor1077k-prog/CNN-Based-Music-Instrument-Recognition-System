@@ -1,0 +1,6 @@
+index,file_path,true_label,pred_label,confidence,true_prob
+1174,/workspace/datasets/IRMAS-ProcessedTrainingData/validation/spectrograms/vio/[vio][pop_roc]2146__2.png,vio,voi,0.9999999,1.47507055e-08
+753,/workspace/datasets/IRMAS-ProcessedTrainingData/validation/spectrograms/pia/[pia][jaz_blu]1340__3.png,pia,org,0.9999964,7.650022e-07
+891,/workspace/datasets/IRMAS-ProcessedTrainingData/validation/spectrograms/sax/[sax][jaz_blu]1565__2.png,sax,tru,0.9999962,3.2535677e-06
+281,/workspace/datasets/IRMAS-ProcessedTrainingData/validation/spectrograms/gac/202__[gac][dru][cou_fol]0673__1.png,gac,gel,0.9998919,4.9069873e-05
+1113,/workspace/datasets/IRMAS-ProcessedTrainingData/validation/spectrograms/vio/[vio][cla]2135__1.png,vio,cel,0.9998857,0.000112658636
