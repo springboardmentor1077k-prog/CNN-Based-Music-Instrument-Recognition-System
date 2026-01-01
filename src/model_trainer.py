@@ -64,26 +64,34 @@ class ModelTrainer:
         self.model = models.Sequential([
             layers.Rescaling(1./255, input_shape=(self.img_height, self.img_width, 3)),
             
-            layers.Conv2D(16, 3, padding='same', activation='relu'),
+            # Layer 1: Increased filters and larger kernel to capture broad structures
+            layers.Conv2D(32, (5, 5), padding='same', activation='relu'),
             layers.BatchNormalization(),
             layers.MaxPooling2D(),
             
-            layers.Conv2D(32, 3, padding='same', activation='relu'),
+            # Layer 2: 64 filters
+            layers.Conv2D(64, (3, 3), padding='same', activation='relu'),
             layers.BatchNormalization(),
             layers.MaxPooling2D(),
             
-            layers.Conv2D(64, 3, padding='same', activation='relu'),
+            # Layer 3: 128 filters
+            layers.Conv2D(128, (3, 3), padding='same', activation='relu'),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(),
+
+            # Layer 4: 256 filters for deep feature extraction
+            layers.Conv2D(256, (3, 3), padding='same', activation='relu'),
             layers.BatchNormalization(),
             layers.MaxPooling2D(),
             
             layers.Dropout(dropout_rate),
             layers.GlobalAveragePooling2D(),
             
-            layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(l2_rate)),
+            layers.Dense(256, activation='relu', kernel_regularizer=regularizers.l2(l2_rate)),
             layers.BatchNormalization(),
             layers.Dropout(dropout_rate),
             
-            layers.Dense(num_classes) # No activation here, will use from_logits=True in loss
+            layers.Dense(num_classes) # Logits
         ])
 
         self.model.compile(optimizer='adam',
