@@ -55,8 +55,59 @@ class ModelTrainer:
 
         # Configure for performance
         AUTOTUNE = tf.data.AUTOTUNE
+        
+        # Apply SpecAugment to training data only
+        self.train_ds = self.train_ds.map(
+            lambda x, y: (self.apply_spec_augment(x), y),
+            num_parallel_calls=AUTOTUNE
+        )
+
         self.train_ds = self.train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
         self.val_ds = self.val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+
+    def apply_spec_augment(self, image_batch, freq_mask_max=20, time_mask_max=30):
+        """Applies random frequency and time masking to a batch of images."""
+        # Note: image_batch is (Batch, H, W, C)
+        batch_size = tf.shape(image_batch)[0]
+        img_height = tf.shape(image_batch)[1]
+        img_width = tf.shape(image_batch)[2]
+
+        # 1. Frequency Masking (Horizontal stripes)
+        f = tf.random.uniform(shape=[batch_size], minval=0, maxval=freq_mask_max, dtype=tf.int32)
+        f0 = tf.random.uniform(shape=[batch_size], minval=0, maxval=img_height - freq_mask_max, dtype=tf.int32)
+        
+        # 2. Time Masking (Vertical stripes)
+        t = tf.random.uniform(shape=[batch_size], minval=0, maxval=time_mask_max, dtype=tf.int32)
+        t0 = tf.random.uniform(shape=[batch_size], minval=0, maxval=img_width - time_mask_max, dtype=tf.int32)
+
+        # Create masks
+        # We process this via a loop over the batch for simplicity in TF
+        def mask_single_image(i):
+            img = image_batch[i]
+            
+            # Apply freq mask
+            mask_f = tf.concat([
+                tf.ones([f0[i], img_width, 3]),
+                tf.zeros([f[i], img_width, 3]),
+                tf.ones([img_height - f0[i] - f[i], img_width, 3])
+            ], axis=0)
+            img = img * mask_f
+            
+            # Apply time mask
+            mask_t = tf.concat([
+                tf.ones([img_height, t0[i], 3]),
+                tf.zeros([img_height, t[i], 3]),
+                tf.ones([img_height, img_width - t0[i] - t[i], 3])
+            ], axis=1)
+            img = img * mask_t
+            
+            return img
+
+        # Use tf.map_fn to apply masking to each image in the batch
+        augmented_batch = tf.map_fn(mask_single_image, tf.range(batch_size), dtype=tf.float32)
+        
+        return augmented_batch
+
 
     def build_model(self, dropout_rate=0.5, l2_rate=0.001):
         num_classes = len(self.class_names)
