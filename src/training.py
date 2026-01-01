@@ -16,7 +16,7 @@ def main():
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training")
     parser.add_argument("--dropout", type=float, default=0.5, help="Dropout rate")
     parser.add_argument("--l2", type=float, default=0.001, help="L2 regularization rate")
-    parser.add_argument("--img_size", type=int, default=128, help="Input image size (height and width)")
+    parser.add_argument("--img_size", type=int, default=224, help="Input image size (height and width)")
     parser.add_argument("--output_dir", type=str, default=None, help="Directory to save outputs")
     parser.add_argument("--no_class_weights", action="store_false", dest="use_class_weights", help="Disable class weights")
     parser.set_defaults(use_class_weights=True)

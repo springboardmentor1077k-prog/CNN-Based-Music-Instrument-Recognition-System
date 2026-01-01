@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--test_dir", type=str, default=None, help="Path to IRMAS-TestingData")
     parser.add_argument("--model_path", type=str, default=None, help="Path to the trained .keras model")
     parser.add_argument("--output_dir", type=str, default=None, help="Directory for temp images")
+    parser.add_argument("--img_size", type=int, default=224, help="Input image size")
     args = parser.parse_args()
 
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -152,7 +153,7 @@ def main():
                 save_clean_spectrogram(y_window, sr, TEMP_IMG_PATH)
                 
                 # Load & Preprocess
-                img = image.load_img(TEMP_IMG_PATH, target_size=(128, 128))
+                img = image.load_img(TEMP_IMG_PATH, target_size=(args.img_size, args.img_size))
                 img_array = image.img_to_array(img)
                 batch_images.append(img_array)
                 

@@ -61,6 +61,7 @@ def main():
     parser.add_argument("--data_dir", type=str, default=None, help="Path to validation spectrograms")
     parser.add_argument("--model_path", type=str, default=None, help="Path to the trained model")
     parser.add_argument("--output_dir", type=str, default=None, help="Directory to save evaluation results")
+    parser.add_argument("--img_size", type=int, default=224, help="Input image size")
     args = parser.parse_args()
 
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -99,7 +100,7 @@ def main():
     val_ds = tf.keras.utils.image_dataset_from_directory(
         DATA_DIR,
         seed=123,
-        image_size=(128, 128),
+        image_size=(args.img_size, args.img_size),
         batch_size=32,
         shuffle=False # CRITICAL: Do not shuffle for metrics
     )

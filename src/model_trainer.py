@@ -17,7 +17,7 @@ from sklearn.utils import class_weight
 
 
 class ModelTrainer:
-    def __init__(self, train_dir, val_dir, img_height=128, img_width=128, batch_size=32):
+    def __init__(self, train_dir, val_dir, img_height=224, img_width=224, batch_size=32):
         self.train_dir = train_dir
         self.val_dir = val_dir
         self.img_height = img_height
