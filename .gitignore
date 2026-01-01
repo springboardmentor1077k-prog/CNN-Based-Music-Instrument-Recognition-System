@@ -11,6 +11,7 @@ venv/
 datasets/
 logs/
 scripts/
+notebook/
 Makefile
 *.txt
 *.zip
