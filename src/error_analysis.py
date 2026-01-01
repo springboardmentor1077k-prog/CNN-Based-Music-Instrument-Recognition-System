@@ -96,23 +96,21 @@ def main():
     # Sort by Confidence (Descending) -> "Confident Mistakes"
     mistakes.sort(key=lambda x: x['confidence'], reverse=True)
     
-    # Top N Worst
+    # Top N Worst (for printing)
     top_mistakes = mistakes[:args.top_n]
     
     print(f"\nFound {len(mistakes)} total errors.")
     print(f"--- Top {args.top_n} Overconfident Mistakes ---")
     
-    results = []
     for m in top_mistakes:
         print(f"[{m['confidence']:.4f}] Predicted: {m['pred_label']} | Actual: {m['true_label']}")
         print(f"   File: {os.path.basename(m['file_path'])}")
-        results.append(m)
 
-    # Save to CSV
-    df = pd.DataFrame(results)
-    output_csv = os.path.join(OUTPUT_DIR, "error_analysis_top_mistakes.csv")
+    # Save ALL mistakes to CSV
+    df = pd.DataFrame(mistakes)
+    output_csv = os.path.join(OUTPUT_DIR, "error_analysis_all_mistakes.csv")
     df.to_csv(output_csv, index=False)
-    print(f"\nSaved analysis to {output_csv}")
+    print(f"\nSaved FULL analysis of {len(mistakes)} errors to {output_csv}")
     print("---------------------------------------------------")
 
 if __name__ == "__main__":
