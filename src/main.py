@@ -1,5 +1,9 @@
 import os
 import sys
+
+# Fix for Numba/Librosa permission issue in Docker (non-root)
+os.environ['NUMBA_CACHE_DIR'] = '/tmp'
+
 import matplotlib
 matplotlib.use('Agg')  # Required for headless plotting on HPC
 import matplotlib.pyplot as plt

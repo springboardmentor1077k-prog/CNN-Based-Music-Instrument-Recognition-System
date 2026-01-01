@@ -1,4 +1,8 @@
 import os
+
+# Fix for Numba/Librosa permission issue in Docker (non-root)
+os.environ['NUMBA_CACHE_DIR'] = '/tmp'
+
 import tensorflow as tf
 from tensorflow.keras import layers, models, regularizers
 import matplotlib
@@ -9,6 +13,7 @@ import datetime
 import numpy as np
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.utils import class_weight
 
 
 class ModelTrainer:
@@ -87,7 +92,7 @@ class ModelTrainer:
         
         self.model.summary()
 
-    def train(self, epochs=10):
+    def train(self, epochs=10, use_class_weights=True):
         if self.model is None:
             print("Model not built. Call build_model() first.")
             return
@@ -115,13 +120,52 @@ class ModelTrainer:
             verbose=1
         )
 
+        # Calculate class weights if requested
+        weights = None
+        if use_class_weights:
+            weights = self.get_class_weights()
+
         self.history = self.model.fit(
             self.train_ds,
             validation_data=self.val_ds,
             epochs=epochs,
-            callbacks=[tensorboard_callback, lr_scheduler, early_stopping]
+            callbacks=[tensorboard_callback, lr_scheduler, early_stopping],
+            class_weight=weights
         )
         return self.history
+
+    def get_class_weights(self):
+        """Calculates class weights to handle imbalance."""
+        if self.train_ds is None:
+            print("Dataset not loaded. Call load_data() first.")
+            return None
+            
+        print("Calculating class weights...")
+        
+        # Extract labels from the dataset
+        y_train = []
+        # We need to unbatch to get individual labels correctly if we want to be sure,
+        # but iterating over batches and extending also works.
+        for _, labels in self.train_ds:
+            y_train.extend(labels.numpy())
+        y_train = np.array(y_train)
+        
+        # Calculate weights
+        unique_classes = np.unique(y_train)
+        weights = class_weight.compute_class_weight(
+            class_weight='balanced',
+            classes=unique_classes,
+            y=y_train
+        )
+        
+        weight_dict = {cls: weight for cls, weight in zip(unique_classes, weights)}
+        
+        # Print for verification
+        readable_weights = {self.class_names[i]: f"{w:.2f}" for i, w in weight_dict.items()}
+        print(f"Computed Class Weights: {readable_weights}")
+        
+        return weight_dict
+
 
     def plot_history(self, output_dir):
         if self.history is None:
@@ -165,20 +209,20 @@ class ModelTrainer:
 
         print("Evaluating model on validation set...")
         
-        # Get true labels and predicted labels
+        # Get true labels efficiently
         y_true = []
-        y_pred = []
-
-        # Iterate over the validation dataset
-        # Note: unbatch() is important to get individual images
-        for images, labels in self.val_ds.unbatch():
-            y_true.append(labels.numpy())
-            # Predict
-            predictions = self.model.predict(tf.expand_dims(images, 0), verbose=0)
-            y_pred.append(np.argmax(predictions))
-
+        for _, labels in self.val_ds:
+            y_true.extend(labels.numpy())
         y_true = np.array(y_true)
-        y_pred = np.array(y_pred)
+
+        # Get predicted labels using batch prediction
+        print("Running batch prediction...")
+        predictions = self.model.predict(self.val_ds)
+        # Use softmax if the model outputs logits (it does, based on build_model)
+        if predictions.shape[-1] > 1:
+            y_pred = np.argmax(predictions, axis=1)
+        else:
+            y_pred = (predictions > 0.5).astype(int)
 
         # 1. Classification Report
         report = classification_report(y_true, y_pred, target_names=self.class_names, output_dict=True)

@@ -1,3 +1,8 @@
+import os
+
+# Fix for Numba/Librosa permission issue in Docker (non-root)
+os.environ['NUMBA_CACHE_DIR'] = '/tmp'
+
 import librosa
 import numpy as np
 
