@@ -13,6 +13,6 @@ Skipped (Multi-label / Unknown Class): 1638
 Total Evaluated (Single Label): 1236
 Processing Errors: 0
 --------------------
-Correct Predictions: 816
-Accuracy: 66.02%
+Correct Predictions: 788
+Accuracy: 63.75%
 ========================================
