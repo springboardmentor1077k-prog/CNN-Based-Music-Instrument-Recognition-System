@@ -1,0 +1,6 @@
+In this task, the learning rate was tuned to address validation instability observed in earlier 
+experiments. The learning rate was reduced from the default value to improve optimization stability 
+while keeping the model architecture and training setup unchanged. The experiment showed smoother 
+training and validation loss curves, indicating reduced validation noise and improved generalization. 
+Although convergence became slower, the overall training behavior was more stable, making the change 
+effective and worthwhile.
