@@ -1,0 +1,10 @@
+In this task, three optimizers—SGD, Adam, and RMSprop—were evaluated under controlled experimental 
+conditions using the same model architecture, learning rate, number of epochs, and dataset. The 
+comparison focused on convergence speed, validation loss stability, recall behavior, and overfitting 
+tendency.
+
+Adam demonstrated the fastest convergence and achieved higher recall but showed mild validation 
+fluctuations. RMSprop provided more stable validation loss with balanced convergence speed. SGD 
+converged slowly but showed stable training with minimal overfitting. Overall, Adam offered the best 
+performance in terms of recall and convergence speed, while RMSprop showed better stability. The 
+experiment highlights the trade-off between speed and stability when selecting optimizers.
