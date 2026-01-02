@@ -47,6 +47,7 @@ class ModelTrainer:
             image_size=(self.img_height, self.img_width),
             batch_size=self.batch_size,
             color_mode='rgb',
+            label_mode='categorical',
             shuffle=True
         )
         
@@ -57,6 +58,7 @@ class ModelTrainer:
             image_size=(self.img_height, self.img_width),
             batch_size=self.batch_size,
             color_mode='rgb',
+            label_mode='categorical',
             shuffle=False
         )
 
@@ -156,7 +158,7 @@ class ModelTrainer:
         ])
 
         self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-                      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                      loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True, label_smoothing=0.1),
                       metrics=['accuracy'])
         
         self.model.summary()
@@ -216,7 +218,10 @@ class ModelTrainer:
         # We need to unbatch to get individual labels correctly if we want to be sure,
         # but iterating over batches and extending also works.
         for _, labels in self.train_ds:
-            y_train.extend(labels.numpy())
+            if labels.ndim > 1: # Handle one-hot encoded labels
+                 y_train.extend(np.argmax(labels.numpy(), axis=1))
+            else:
+                 y_train.extend(labels.numpy())
         y_train = np.array(y_train)
         
         # Calculate weights
@@ -281,7 +286,10 @@ class ModelTrainer:
         # Get true labels efficiently
         y_true = []
         for _, labels in self.val_ds:
-            y_true.extend(labels.numpy())
+            if labels.ndim > 1: # Handle one-hot encoded labels
+                y_true.extend(np.argmax(labels.numpy(), axis=1))
+            else:
+                y_true.extend(labels.numpy())
         y_true = np.array(y_true)
 
         # Get predicted labels using batch prediction

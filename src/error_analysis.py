@@ -68,7 +68,10 @@ def main():
 
     print("Generating predictions...")
     for images, labels in val_ds:
-        y_true.extend(labels.numpy())
+        if labels.ndim > 1: # One-hot encoded
+            y_true.extend(np.argmax(labels.numpy(), axis=1))
+        else:
+            y_true.extend(labels.numpy())
         logits = model.predict(images, verbose=0)
         probs = tf.nn.softmax(logits).numpy()
         y_probs.extend(probs)
