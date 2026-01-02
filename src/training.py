@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training")
     parser.add_argument("--dropout", type=float, default=0.5, help="Dropout rate")
     parser.add_argument("--l2", type=float, default=0.001, help="L2 regularization rate")
+    parser.add_argument("--learning_rate", type=float, default=0.001, help="Initial learning rate")
     parser.add_argument("--img_size", type=int, default=224, help="Input image size (height and width)")
     parser.add_argument("--output_dir", type=str, default=None, help="Directory to save outputs")
     parser.add_argument("--no_class_weights", action="store_false", dest="use_class_weights", help="Disable class weights")
@@ -42,13 +43,13 @@ def main():
         exit(1)
 
     print("--- Starting Model Training (HPC Optimized) ---")
-    print(f"Configuration: Epochs={args.epochs}, Batch Size={args.batch_size}, Dropout={args.dropout}, L2={args.l2}")
+    print(f"Configuration: Epochs={args.epochs}, Batch Size={args.batch_size}, Dropout={args.dropout}, L2={args.l2}, LR={args.learning_rate}")
     
     trainer = ModelTrainer(TRAIN_DIR, VAL_DIR, img_height=args.img_size, img_width=args.img_size, batch_size=args.batch_size)
     trainer.load_data()
     
     print(f"Building model with Dropout={args.dropout} and L2={args.l2}...")
-    trainer.build_model(dropout_rate=args.dropout, l2_rate=args.l2)
+    trainer.build_model(dropout_rate=args.dropout, l2_rate=args.l2, learning_rate=args.learning_rate)
     
     # Train
     trainer.train(epochs=args.epochs, use_class_weights=args.use_class_weights)

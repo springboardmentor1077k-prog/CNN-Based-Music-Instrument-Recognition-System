@@ -18,6 +18,16 @@ from sklearn.utils import class_weight
 
 class ModelTrainer:
     def __init__(self, train_dir, val_dir, img_height=224, img_width=224, batch_size=32):
+        # Enable GPU Memory Growth
+        gpus = tf.config.list_physical_devices('GPU')
+        if gpus:
+            try:
+                for gpu in gpus:
+                    tf.config.experimental.set_memory_growth(gpu, True)
+                print(f"Enabled memory growth for {len(gpus)} GPU(s)")
+            except RuntimeError as e:
+                print(e)
+
         self.train_dir = train_dir
         self.val_dir = val_dir
         self.img_height = img_height
@@ -109,7 +119,7 @@ class ModelTrainer:
         return augmented_batch
 
 
-    def build_model(self, dropout_rate=0.5, l2_rate=0.001):
+    def build_model(self, dropout_rate=0.5, l2_rate=0.001, learning_rate=0.001):
         num_classes = len(self.class_names)
 
         self.model = models.Sequential([
@@ -145,7 +155,7 @@ class ModelTrainer:
             layers.Dense(num_classes) # Logits
         ])
 
-        self.model.compile(optimizer='adam',
+        self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=['accuracy'])
         
