@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import concurrent.futures
 
 # Fix for Numba/Librosa permission issue in Docker (non-root)
 os.environ['NUMBA_CACHE_DIR'] = '/tmp'
@@ -10,6 +11,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 from tqdm import tqdm
+import librosa
 
 # Add src to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -23,9 +25,40 @@ def load_true_labels(txt_path):
         return []
     
     with open(txt_path, 'r') as f:
-        # Read lines, strip whitespace, and ignore empty lines
         labels = [line.strip() for line in f.readlines() if line.strip()]
     return labels
+
+def prepare_file_windows(wav_file, test_data_dir, class_names):
+    """Worker function to load audio and slice into windows."""
+    file_path = os.path.join(test_data_dir, wav_file)
+    txt_path = os.path.join(test_data_dir, wav_file.replace('.wav', '.txt'))
+    
+    true_labels = load_true_labels(txt_path)
+    if len(true_labels) != 1 or true_labels[0] not in class_names:
+        return None
+
+    try:
+        y_full, sr = librosa.load(file_path, sr=16000, mono=True)
+    except Exception:
+        return None
+
+    window_size = int(3.0 * sr)
+    stride = int(1.5 * sr)
+    
+    windows = []
+    if len(y_full) < window_size:
+        pad_width = window_size - len(y_full)
+        windows.append(np.pad(y_full, (0, pad_width), mode='constant'))
+    else:
+        for start in range(0, len(y_full) - window_size + 1, stride):
+            windows.append(y_full[start:start+window_size])
+            
+    return {
+        'wav_file': wav_file,
+        'true_label': true_labels[0],
+        'windows': windows,
+        'sr': sr
+    }
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate InstruNet AI on IRMAS Test Set")
@@ -33,33 +66,25 @@ def main():
     parser.add_argument("--model_path", type=str, default=None, help="Path to the trained .keras model")
     parser.add_argument("--output_dir", type=str, default=None, help="Directory for temp images")
     parser.add_argument("--img_size", type=int, default=224, help="Input image size")
+    parser.add_argument("--batch_size", type=int, default=32, help="Number of audio files to batch process")
     args = parser.parse_args()
 
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    TEST_DATA_DIR = args.test_dir or os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TestingData")
+    MODEL_PATH = args.model_path or os.path.join(PROJECT_ROOT, "outputs", "instrunet_cnn.keras")
     
-    # Resolve Paths
-    if args.test_dir:
-        TEST_DATA_DIR = args.test_dir
-    else:
-        TEST_DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TestingData")
-        
-    if args.model_path:
-        MODEL_PATH = args.model_path
-    else:
-        MODEL_PATH = os.path.join(PROJECT_ROOT, "outputs", "instrunet_cnn.keras")
-        
+    # Use output_dir for temp files if provided
     if args.output_dir:
-        TEMP_IMG_PATH = os.path.join(args.output_dir, "temp_inference_spec.png")
+        temp_dir = os.path.join(args.output_dir, "temp_inference")
     else:
-        TEMP_IMG_PATH = os.path.join(PROJECT_ROOT, "outputs", "temp_inference_spec.png")
+        temp_dir = os.path.join(PROJECT_ROOT, "outputs", "temp_inference")
+    os.makedirs(temp_dir, exist_ok=True)
     
     # Class names from training
     TRAIN_DATA_DIR = os.path.join(PROJECT_ROOT, "datasets", "IRMAS-TrainingData")
-    # Ensure this matches the training order (alphabetical is standard for image_dataset_from_directory)
     if os.path.exists(TRAIN_DATA_DIR):
         CLASS_NAMES = sorted([d for d in os.listdir(TRAIN_DATA_DIR) if os.path.isdir(os.path.join(TRAIN_DATA_DIR, d))])
     else:
-        # Fallback if training dir is missing, though it should exist
         CLASS_NAMES = ['cel', 'cla', 'flu', 'gac', 'gel', 'org', 'pia', 'sax', 'tru', 'vio', 'voi']
     
     print(f"--- IRMAS Single-Label Test Set Evaluation ---")
@@ -89,106 +114,78 @@ def main():
     
     print(f"Found {len(wav_files)} total audio files. Filtering for single-label samples...")
     
-    for wav_file in tqdm(wav_files):
-        file_path = os.path.join(TEST_DATA_DIR, wav_file)
-        txt_path = os.path.join(TEST_DATA_DIR, wav_file.replace('.wav', '.txt'))
+    # Process in large batches of files
+    file_batch_size = args.batch_size
+    
+    for i in range(0, len(wav_files), file_batch_size):
+        chunk = wav_files[i:i+file_batch_size]
         
-        # 1. Get True Labels & Filter
-        true_labels = load_true_labels(txt_path)
+        # 1. Parallel Load & Slice
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            # We map the function to the chunk of files. 
+            # Note: We pass fixed arguments (TEST_DATA_DIR, CLASS_NAMES) to the function
+            batch_results = list(tqdm(executor.map(lambda f: prepare_file_windows(f, TEST_DATA_DIR, CLASS_NAMES), chunk), 
+                                     total=len(chunk), desc=f"Batch {i//file_batch_size + 1}", leave=False))
         
-        # SKIP if not exactly one label
-        if len(true_labels) != 1:
-            skipped_multi_label += 1
+        # Filter Nones (Skipped files or load errors)
+        valid_results = [r for r in batch_results if r is not None]
+        skipped_multi_label += (len(chunk) - len(valid_results))
+        
+        if not valid_results:
+            continue
+
+        # 2. Sequential Spectrogram Generation (Matplotlib is not thread-safe)
+        all_windows = []
+        file_window_counts = []
+        
+        for res in valid_results:
+            count = 0
+            for win in res['windows']:
+                # Unique filename per window
+                temp_path = os.path.join(temp_dir, f"{res['wav_file']}_win_{count}.png")
+                save_clean_spectrogram(win, res['sr'], temp_path)
+                
+                try:
+                    img = image.load_img(temp_path, target_size=(args.img_size, args.img_size))
+                    all_windows.append(image.img_to_array(img))
+                    os.remove(temp_path) # Cleanup immediately
+                    count += 1
+                except Exception as e:
+                    print(f"Error processing window for {res['wav_file']}: {e}")
+                    errors += 1
+                    
+            file_window_counts.append(count)
+
+        # 3. Massive GPU Batch Prediction
+        if not all_windows:
             continue
             
-        true_label = true_labels[0]
+        all_windows_tensor = np.array(all_windows)
+        all_predictions = model.predict(all_windows_tensor, batch_size=64, verbose=0)
         
-        # Check if label is in our known classes (some test files might have unknown classes?)
-        if true_label not in CLASS_NAMES:
-            # print(f"Skipping unknown class: {true_label}")
-            skipped_multi_label += 1 # Treating as skip
-            continue
-
-        # 2. Process Audio (Sliding Window Approach)
-        # Load the full audio first
-        # We need to manually load and slice because process_audio_file does automatic cropping
-        import librosa
-        try:
-            # Load full audio at 16kHz
-            y_full, sr = librosa.load(file_path, sr=16000, mono=True)
-        except Exception as e:
-            print(f"Error loading audio {wav_file}: {e}")
-            errors += 1
-            continue
-
-        # Define window parameters
-        window_size = int(3.0 * sr)  # 3 seconds
-        stride = int(1.5 * sr)       # 1.5 seconds overlap
-        
-        # If audio is shorter than 3s, pad it once and use as single window
-        if len(y_full) < window_size:
-            pad_width = window_size - len(y_full)
-            y_window = np.pad(y_full, (0, pad_width), mode='constant')
-            windows = [y_window]
-        else:
-            # Slice into windows
-            windows = []
-            for start in range(0, len(y_full) - window_size + 1, stride):
-                end = start + window_size
-                windows.append(y_full[start:end])
-            
-            # Handle the last bit if we have leftovers significant enough? 
-            # Ideally we just take what fits. If we have no windows (rare edge case), take the center.
-            if not windows:
-                # Fallback: Center crop
-                start = (len(y_full) - window_size) // 2
-                windows = [y_full[start:start+window_size]]
-
-        # 3. Batch Prediction
-        batch_images = []
-        
-        for y_window in windows:
-            try:
-                # Generate Spectrogram for this window
-                save_clean_spectrogram(y_window, sr, TEMP_IMG_PATH)
-                
-                # Load & Preprocess
-                img = image.load_img(TEMP_IMG_PATH, target_size=(args.img_size, args.img_size))
-                img_array = image.img_to_array(img)
-                batch_images.append(img_array)
-                
-            except Exception as e:
-                # Skip bad windows
+        # 4. Soft Voting per File
+        curr_idx = 0
+        for j, res in enumerate(valid_results):
+            count = file_window_counts[j]
+            if count == 0:
                 continue
-        
-        if not batch_images:
-            errors += 1
-            continue
+                
+            file_preds = all_predictions[curr_idx : curr_idx + count]
+            curr_idx += count
             
-        # Stack all windows into one batch: shape (N_windows, 128, 128, 3)
-        batch_tensor = np.array(batch_images)
+            avg_pred = np.mean(file_preds, axis=0)
+            predicted_index = np.argmax(avg_pred)
+            predicted_label = CLASS_NAMES[predicted_index]
+            
+            if predicted_label == res['true_label']:
+                correct_predictions += 1
+            total_evaluated += 1
         
-        # Predict on the whole batch at once
-        predictions = model.predict(batch_tensor, verbose=0)
-        
-        # 4. Soft Voting (Average the probabilities)
-        # predictions shape: (N_windows, 11)
-        avg_prediction = np.mean(predictions, axis=0)
-        
-        predicted_index = np.argmax(avg_prediction)
-        predicted_label = CLASS_NAMES[predicted_index]
-        
-        # 5. Check Correctness
-        
-        # 6. Check Correctness
-        if predicted_label == true_label:
-            correct_predictions += 1
-        
-        total_evaluated += 1
-        
-    # Cleanup
-    if os.path.exists(TEMP_IMG_PATH):
-        os.remove(TEMP_IMG_PATH)
+    # Cleanup temp dir
+    try:
+        os.rmdir(temp_dir)
+    except:
+        pass
         
     # Results
     print("\n" + "="*40)
