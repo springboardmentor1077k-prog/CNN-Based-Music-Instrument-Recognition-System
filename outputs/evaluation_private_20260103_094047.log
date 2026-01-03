@@ -1,0 +1,28 @@
+Loading model...
+Loading validation dataset...
+Found 1346 files belonging to 11 classes.
+Generating predictions on validation data...
+Calculating detailed metrics...
+Detailed metrics saved to /workspace/outputs/detailed_metrics.csv
+
+Sample Probabilities (First 5):
+        cel       cla       flu  ...       tru       vio       voi
+0  0.482443  0.037666  0.020084  ...  0.016937  0.388414  0.006461
+1  0.314451  0.009504  0.005530  ...  0.002109  0.636741  0.001115
+2  0.780631  0.006878  0.045791  ...  0.004599  0.103156  0.006901
+3  0.579022  0.047630  0.029465  ...  0.038055  0.091281  0.026644
+4  0.414485  0.001389  0.001079  ...  0.006174  0.511980  0.007383
+
+[5 rows x 11 columns]
+
+Sample Binary Predictions (Threshold > 0.5):
+   cel  cla  flu  gac  gel  org  pia  sax  tru  vio  voi
+0    0    0    0    0    0    0    0    0    0    0    0
+1    0    0    0    0    0    0    0    0    0    1    0
+2    1    0    0    0    0    0    0    0    0    0    0
+3    1    0    0    0    0    0    0    0    0    0    0
+4    0    0    0    0    0    0    0    0    0    1    0
+Plotting ROC curves...
+ROC curves saved to /workspace/outputs/roc_curves.png
+
+--- Task 10 Evaluation Completed ---

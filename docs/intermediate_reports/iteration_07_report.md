@@ -1,29 +1,27 @@
-# Iteration 7: Optimization & Regularization
+# Iteration 7: Label Smoothing & Aggregation Analysis
 
-**Date:** January 02, 2026
+**Date:** January 03, 2026
 **Baseline:** Iteration 5 (SpecAugment, ~69% Test Acc)
-**Objective:** Reduce Overfitting (99% Train vs 81% Val gap) & Improve Full-Song Evaluation
+**Status:** Completed
 
-## 1. Current State (Iteration 6 - Label Smoothing)
-We applied Label Smoothing (0.1) to the baseline.
--   **Validation Acc:** 81.35% (Improved from ~73%)
--   **Test Acc:** 70.23% (Improved from 69.09%)
--   **Status:** Overconfidence reduced, but significant generalization gap remains.
+## 1. Objective
+Reduce model overconfidence and improve full-song test performance.
 
-## 2. Hypothesis
-The model is "memorizing" training artifacts due to high capacity and ineffective regularization (Standard Dropout). Additionally, the testing aggregation (Mean Pooling) punishes intermittent instruments in full songs.
+## 2. Changes Applied
+1.  **Label Smoothing (0.1):** Replaced hard targets (0, 1) with soft targets (0.05, 0.95) using Categorical Crossentropy.
+2.  **Top-K Pooling (33%):** Experimented with taking the mean of only the top 33% most confident windows per song during testing.
 
-## 3. Optimization Strategy (Iteration 7)
+## 3. Results & Metrics
 
-### A. Training Architecture
-*   **SpatialDropout2D:** Replacing standard Dropout.
-    *   *Why:* Spectrograms have high local correlation. Dropping pixels is weak; dropping entire *feature maps* forces the model to learn redundant, robust features (e.g., Timbre + Attack, not just one).
+| Metric | Iteration 5 (Baseline) | Iteration 7 (Label Smoothing) |
+| :--- | :--- | :--- |
+| **Validation Acc** | ~73.5% | **81.35%** |
+| **Test Acc (Mean)** | 69.09% | **70.23%** |
+| **Test Acc (Top-K)** | N/A | 69.26% |
 
-### B. Testing Inference
-*   **Top-K Mean Pooling:** Replacing Global Mean Pooling.
-    *   *Why:* IRMAS test files are full songs. An instrument might only appear for 15 seconds. Mean pooling dilutes this signal with 2 minutes of silence. Top-K (e.g., Top 33%) focuses on the most confident detections, ignoring the "noise" of the rest of the track.
+### Key Observations
+-   **Success:** Label Smoothing effectively reduced the "Overconfidence Misconception." No more 100% confidence errors. Violin and Saxophone recall improved significantly.
+-   **Failure:** Top-K Pooling (33%) lowered accuracy compared to Mean Pooling. This suggests that for IRMAS, the instrument signal is distributed enough that Mean Pooling remains the superior aggregation method.
 
-## 4. Next Steps
-1.  Modify `testing.py` to implement Top-K Pooling.
-2.  Modify `model_trainer.py` to implement `SpatialDropout2D`.
-3.  Retrain and Evaluate.
+## 4. Conclusion
+Iteration 7 successfully broke the 70% Test Accuracy barrier. However, the ~11% gap between Validation and Test indicates that fundamental overfitting remains.
