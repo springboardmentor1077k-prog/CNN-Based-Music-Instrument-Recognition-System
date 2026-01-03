@@ -1,0 +1,18 @@
+--- IRMAS Single-Label Test Set Evaluation ---
+Model: /workspace/outputs/instrunet_cnn.keras
+Test Data: /workspace/datasets/IRMAS-TestingData
+Classes: ['cel', 'cla', 'flu', 'gac', 'gel', 'org', 'pia', 'sax', 'tru', 'vio', 'voi']
+Loading model...
+Found 2874 total audio files. Filtering for single-label samples...
+
+========================================
+FINAL RESULTS (Single-Label Test Set)
+========================================
+Total Audio Files Found: 2874
+Skipped (Multi-label / Unknown Class): 1638
+Total Evaluated (Single Label): 1236
+Processing Errors: 0
+--------------------
+Correct Predictions: 856
+Accuracy: 69.26%
+========================================
