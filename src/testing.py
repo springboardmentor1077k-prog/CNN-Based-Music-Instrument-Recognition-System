@@ -163,7 +163,7 @@ def main():
         all_windows_tensor = np.array(all_windows)
         all_predictions = model.predict(all_windows_tensor, batch_size=64, verbose=0)
         
-        # 4. Soft Voting per File
+        # 4. Soft Voting per File (Top-K Pooling)
         curr_idx = 0
         for j, res in enumerate(valid_results):
             count = file_window_counts[j]
@@ -173,7 +173,19 @@ def main():
             file_preds = all_predictions[curr_idx : curr_idx + count]
             curr_idx += count
             
-            avg_pred = np.mean(file_preds, axis=0)
+            # Top-K Pooling (K=33%)
+            # We want the mean of the top 33% most confident predictions for EACH class.
+            k = max(1, int(count * 0.33))
+            
+            # Sort along the time axis (axis=0) in descending order
+            sorted_preds = np.sort(file_preds, axis=0)[::-1]
+            
+            # Take the top k
+            top_k_preds = sorted_preds[:k, :]
+            
+            # Average the top k
+            avg_pred = np.mean(top_k_preds, axis=0)
+            
             predicted_index = np.argmax(avg_pred)
             predicted_label = CLASS_NAMES[predicted_index]
             
