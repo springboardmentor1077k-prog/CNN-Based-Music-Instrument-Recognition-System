@@ -131,23 +131,26 @@ class ModelTrainer:
             layers.Conv2D(32, (5, 5), padding='same', activation='relu'),
             layers.BatchNormalization(),
             layers.MaxPooling2D(),
+            layers.SpatialDropout2D(0.1),
             
             # Layer 2: 64 filters
             layers.Conv2D(64, (3, 3), padding='same', activation='relu'),
             layers.BatchNormalization(),
             layers.MaxPooling2D(),
+            layers.SpatialDropout2D(0.1),
             
             # Layer 3: 128 filters
             layers.Conv2D(128, (3, 3), padding='same', activation='relu'),
             layers.BatchNormalization(),
             layers.MaxPooling2D(),
+            layers.SpatialDropout2D(0.2),
 
             # Layer 4: 256 filters for deep feature extraction
             layers.Conv2D(256, (3, 3), padding='same', activation='relu'),
             layers.BatchNormalization(),
             layers.MaxPooling2D(),
+            layers.SpatialDropout2D(0.2),
             
-            layers.Dropout(dropout_rate),
             layers.GlobalAveragePooling2D(),
             
             layers.Dense(256, activation='relu', kernel_regularizer=regularizers.l2(l2_rate)),
