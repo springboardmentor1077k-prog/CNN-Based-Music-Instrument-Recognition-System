@@ -1,0 +1,10 @@
+In this task, L2 regularization was introduced to the dense layer of the CNN model to address overfitting observed in earlier tasks. A mild regularization strength (λ = 0.001) was applied only to the 
+dense layer weights, while keeping the learning rate and number of epochs unchanged. Dropout values were 
+slightly adjusted to balance regularization strength.
+
+Compared to the previous model, the training accuracy decreased slightly, indicating reduced memorization 
+of the training data. At the same time, validation accuracy became more stable, and the gap between 
+training and validation accuracy was reduced. This behavior suggests improved generalization.
+
+Overall, the introduction of L2 regularization helped control overfitting and produced a more balanced 
+learning behavior, making the change worthwhile despite a minor reduction in training accuracy.
