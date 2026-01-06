@@ -1,0 +1,21 @@
+--- Starting Error Analysis (Top 5 Worst Predictions) ---
+Loading model...
+Loading validation dataset...
+Found 1346 files belonging to 11 classes.
+Generating predictions...
+
+Found 239 total errors.
+--- Top 5 Overconfident Mistakes ---
+[0.9762] Predicted: org | Actual: pia
+   File: [pia][jaz_blu]1340__3.png
+[0.9486] Predicted: vio | Actual: sax
+   File: [sax][jaz_blu]1782__3.png
+[0.9469] Predicted: gac | Actual: gel
+   File: 209__[gel][nod][cou_fol]0757__2.png
+[0.9417] Predicted: voi | Actual: vio
+   File: [vio][pop_roc]2146__2.png
+[0.9229] Predicted: tru | Actual: sax
+   File: [sax][jaz_blu]1565__2.png
+
+Saved FULL analysis of 239 errors to /workspace/outputs/error_analysis_all_mistakes.csv
+---------------------------------------------------
