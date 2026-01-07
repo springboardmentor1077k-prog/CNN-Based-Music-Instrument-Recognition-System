@@ -1,0 +1,10 @@
+Baseline (before regularization):
+Train Acc > Val Acc (large gap)
+
+After Dropout + L2 (Task 14):
+Reduced gap
+Stable validation accuracy
+
+Task 15 Decision:
+No tuning applied
+Reason: Model already generalizes well

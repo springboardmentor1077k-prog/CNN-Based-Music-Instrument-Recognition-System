@@ -1,0 +1,50 @@
+Task 15 – Data Split Verification and Model Diagnosis
+
+1. Train / Validation Split Check
+
+The dataset split was verified in this task to ensure there is no data leakage.
+The validation set was created earlier in Task 9 and saved as X_val.npy and y_val.npy.
+
+In Task 15, the same validation data was loaded and explicitly frozen by copying it
+into the task15/outputs directory. No reshuffling, regeneration, or re-splitting
+of the data was performed.
+
+Data augmentation techniques (time stretching, pitch shifting, noise addition)
+were applied only to the training data in earlier tasks. The validation set
+contains only original, unaugmented audio samples.
+
+This ensures that:
+- Training and validation data are independent
+- No data leakage exists between splits
+- Validation data represents real-world unseen audio
+
+2. Validation Freeze
+
+Once the validation set was verified, it was frozen and reused consistently
+across all experiments in this task. This guarantees fair and reproducible
+model comparison during diagnosis and tuning.
+
+3. Model Diagnosis Using Validation Performance
+
+The trained CNN model (with Dropout and L2 regularization introduced in Task 14)
+was evaluated using the frozen validation set.
+
+Based on training and validation behavior observed in previous tasks:
+- Training accuracy was initially higher than validation accuracy
+- After applying regularization, the gap between training and validation
+  accuracy was reduced
+- Validation loss and accuracy became more stable
+
+Diagnosis:
+The model shows healthy learning behavior with controlled overfitting.
+Generalization has improved compared to earlier baseline models.
+
+4. Tuning Decision
+
+Since the model already demonstrates stable validation performance and a
+reduced train–validation gap, no further tuning was applied in this task.
+Additional tuning could risk overfitting the validation set.
+
+Final Conclusion:
+The data split is clean, the validation set is fixed and representative,
+and the CNN model generalizes well to unseen data.
