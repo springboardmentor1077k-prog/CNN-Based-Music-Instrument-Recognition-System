@@ -1,0 +1,25 @@
+Task 16 – Audio Segmentation Strategy and Verification
+
+Segmentation Strategy:
+Audio clips were segmented into fixed-length segments of 3 seconds
+with 50% overlap (1.5 seconds). This length is sufficient to capture
+instrument timbre while keeping segments short enough for CNN input.
+
+Segmentation Implementation:
+Each audio clip was divided into overlapping segments and saved
+instrument-wise. The label of each segment was inherited from the
+original audio file.
+
+Segment Inspection:
+Five random segments were manually inspected by listening.
+All inspected segments contained audible instrument content.
+No silent or mislabeled segments were observed.
+
+Verification:
+Segment length was consistent across files.
+Instrument labels were correct.
+Segments represent realistic audio portions suitable for CNN training.
+
+Conclusion:
+The segmentation strategy produces clean, correctly labeled,
+and audibly meaningful segments suitable for further model training.
