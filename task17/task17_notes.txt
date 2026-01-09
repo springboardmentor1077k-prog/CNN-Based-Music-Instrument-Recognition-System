@@ -1,0 +1,21 @@
+Task 17 – Prediction Aggregation
+
+Aggregation Strategy:
+Mean (average) of segment-level softmax probabilities.
+
+Without Aggregation:
+Raw segment predictions were used directly.
+Predictions varied across segments of the same clip.
+
+With Aggregation:
+Segment probabilities were averaged to produce a single
+clip-level prediction.
+
+Comparison:
+- Performance: Improved with aggregation
+- Stability: Predictions became more consistent
+- Confidence: Aggregated predictions showed higher confidence
+
+Conclusion:
+Aggregation reduces segment-level noise and produces more
+reliable clip-level predictions.
