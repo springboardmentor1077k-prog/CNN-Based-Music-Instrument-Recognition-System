@@ -1,1 +1,5 @@
-
+- The dataset was successfully loaded using Librosa.
+- Waveform analysis confirmed consistent duration (3 seconds) and high-quality audio.
+- Dataset loading
+- Audio integrity verified
+- Waveform analyzed
