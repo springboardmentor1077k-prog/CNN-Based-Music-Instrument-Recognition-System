@@ -1,0 +1,16 @@
+Done
+- STFT spectrogram generated
+- Mel-spectrogram generated
+- MFCC plot generated
+- Comparison done
+- Justification written
+
+### Best Spectrogram for InstruNet AI
+
+For the InstruNet AI project, the **Mel-Spectrogram** is the most suitable feature representation.
+
+Unlike the STFT spectrogram, the Mel-Spectrogram maps frequencies to the Mel scale, which closely aligns with human auditory perception. This helps the model focus on perceptually important frequency bands while reducing noise from irrelevant high frequencies.
+
+Compared to MFCCs, Mel-Spectrograms preserve rich time-frequency patterns, making them highly compatible with Convolutional Neural Networks (CNNs), which excel at learning spatial features from images.
+
+Therefore, Mel-Spectrograms provide the best balance between perceptual relevance, visual structure, and deep learning performance for automatic instrument recognition.
