@@ -1,0 +1,26 @@
+*Overall Pipeline Flow
+Raw Audio
+   ↓
+Load & Metadata Extraction
+   ↓
+Stereo → Mono
+   ↓
+Resample to 16 kHz
+   ↓
+Amplitude Normalization
+   ↓
+Silence Trimming
+   ↓
+Duration Fixing (Padding / Truncation)
+   ↓
+Clean Audio Output (CNN-ready)
+
+A robust preprocessing pipeline was designed to standardize heterogeneous audio inputs.
+All audio files are converted to mono, resampled to 16 kHz, normalized, silence-trimmed, and padded or truncated to a fixed 3-second duration.
+This ensures uniform spectrogram dimensions, improves CNN generalization, and leads to stable and consistent model accuracy
+
+- Handles 44.1 kHz stereo & 16 kHz mono
+- Fixed duration (3 seconds)
+- CNN-friendly input
+- Prevents data bias
+- Reproducible & scalable
