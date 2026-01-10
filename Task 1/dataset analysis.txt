@@ -1,0 +1,18 @@
+- The dataset has 6705 short audio clips (3 seconds each) in high-quality WAV format.
+- Each clip is labeled with the main instrument (11 types like piano, guitar, violin, voice, etc.).
+- Each clip is labeled with the predominant instrument: 
+	cello (388), 
+	clarinet (505), 
+	flute (451), 
+	acoustic guitar (637), 
+	electric guitar (760), 
+	organ (682), piano (721), 
+	saxophone (626), 
+	trumpet (577), 
+	violin (580),
+	svoice (778).
+- Some clips also note if drums are present and the music genre (classical, pop-rock, country-folk, latin-soul).
+- The collection spans different decades, styles, and recording qualities, but always features one clear instrument per clip.
+
+Downloaded the dataset from the : https://www.upf.edu/web/mtg/irmas
+
