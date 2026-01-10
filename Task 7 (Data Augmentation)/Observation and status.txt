@@ -1,0 +1,8 @@
+Three audio augmentation techniques—pitch shifting, time stretching, and additive noise—were applied to piano, violin, and trumpet audio samples. 
+Visual comparison using Mel Spectrograms shows that augmentations introduce controlled variations while preserving instrument-specific spectral patterns. 
+These augmentations improve model robustness and generalization without altering the core characteristics of the instruments.
+- 3 instruments selected
+- 3 augmentation techniques implemented
+- Mel-spectrograms generated
+- Visual comparison done
+- Clear conclusion written
