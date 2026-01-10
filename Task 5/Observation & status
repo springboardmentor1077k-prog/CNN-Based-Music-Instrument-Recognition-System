@@ -24,3 +24,7 @@ This ensures uniform spectrogram dimensions, improves CNN generalization, and le
 - CNN-friendly input
 - Prevents data bias
 - Reproducible & scalable
+
+The earlier pipeline file(preprocessing_imageSaving) focused on preprocessing validation and spectrogram visualization by saving images.
+The updated pipeline file(Preprocessing)improves label consistency, performs spectrogram-level normalization, and stores data as NumPy tensors, 
+making it fully CNN-ready and more efficient for training and reproducibility.
