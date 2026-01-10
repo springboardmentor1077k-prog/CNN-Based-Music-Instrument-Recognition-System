@@ -28,3 +28,8 @@ This ensures uniform spectrogram dimensions, improves CNN generalization, and le
 The earlier pipeline file(preprocessing_imageSaving) focused on preprocessing validation and spectrogram visualization by saving images.
 The updated pipeline file(Preprocessing)improves label consistency, performs spectrogram-level normalization, and stores data as NumPy tensors, 
 making it fully CNN-ready and more efficient for training and reproducibility.
+The Preprocessing file used for CNN training is second (new) code, because it produces normalized, deterministic, CNN-ready tensors stored in NumPy format.
+Now that your dataset is FINAL-READY, the next steps are:
+1️⃣ Build CNN architecture (Conv2D)
+2️⃣ Train with X_mel.npy and y_labels.npy
+3️⃣ Plot accuracy & loss curves
