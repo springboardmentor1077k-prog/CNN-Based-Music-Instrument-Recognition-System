@@ -1,0 +1,17 @@
+In a Convolutional Neural Network (CNN), hyperparameters are the settings chosen before training that control how the model learns. 
+Key hyperparameters includes 
+  learning rate, 
+  batch size, 
+  number of epochs, 
+  optimizer type, 
+  number of convolutional layers, 
+  filter size, 
+  stride, 
+  padding, 
+  dropout rate, and 
+  weight initialization strategy
+
+I built a CNN model and experimented with the learning rate hyperparameter. 
+With a high learning rate, validation accuracy showed noisy fluctuations. 
+By reducing the learning rate, the validation curve became smoother,
+proving that learning rate tuning helps fix validation noise
