@@ -1,0 +1,3 @@
+The CNN was trained using mel-spectrogram features generated from the audio data pipeline.
+The model consists of multiple convolutional layers with batch normalization and dropout to improve generalization.
+Training and validation performance were monitored using accuracy and loss curves.
