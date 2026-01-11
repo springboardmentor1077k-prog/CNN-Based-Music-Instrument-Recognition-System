@@ -1,0 +1,10 @@
+librosa
+numpy
+matplotlib
+tensorflow
+soundfile
+streamlit
+seaborn
+pydub
+scikit-learn
+reportlab

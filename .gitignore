@@ -1,0 +1,19 @@
+# Ignore the data directory completely
+data/
+
+# Optional: ignore common Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.env
+.venv/
+InstruNet_venv/
+
+# Optional: ignore Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Optional: ignore OS-specific files
+.DS_Store
+Thumbs.db
