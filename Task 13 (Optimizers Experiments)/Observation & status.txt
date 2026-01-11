@@ -1,0 +1,12 @@
+Task 13
+  adam,sdg and rms
+  Choose all 3 optimizers perform the optimizers run the callbak experiments 
+
+Observations
+Adam → Fast convergence, stable training
+RMSprop → Smooth loss reduction, good for audio
+SGD → Slower but sometimes better generalization
+
+Note : Three optimizers—Adam, SGD, and RMSprop—were evaluated using the same CNN architecture and training configuration. 
+Callback mechanisms such as EarlyStopping, ReduceLROnPlateau, and ModelCheckpoint were applied to improve convergence and prevent overfitting. 
+The experimental results show differences in convergence speed and validation performance across optimizers.
