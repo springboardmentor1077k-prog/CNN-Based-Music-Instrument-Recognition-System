@@ -1,0 +1,8 @@
+Segmentation Strategies
+Three audio segmentation strategies
+- random segmentation, 
+- fixed segmentation, and 
+- overlapping segmentation
+were implemented. 
+Five random segments were extracted and visualized using mel-spectrograms for each strategy. 
+The comparison highlights how different segmentation methods capture temporal and spectral variations in audio, which can influence CNN learning and instrument recognition performance.
