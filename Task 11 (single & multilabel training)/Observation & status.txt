@@ -1,0 +1,13 @@
+1️ Single-label training (IRMAS – current dataset)
+2️ Multi-label training (simulated / future InstruNet extension)
+
+Note: 
+Single-label classification was implemented using softmax and categorical cross-entropy, suitable for the IRMAS dataset.
+Multi-label classification was simulated using sigmoid activation and binary cross-entropy to demonstrate multi-instrument detection capability for future InstruNet extensions
+
+- Loads CNN-ready mel features
+- Implements single-label training (IRMAS)
+- Implements multi-label training (simulated)
+- Correct loss & activation functions
+- Saves trained models
+- Plots comparison curves
