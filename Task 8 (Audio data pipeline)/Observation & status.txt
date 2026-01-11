@@ -1,1 +1,21 @@
+How This Pipeline Works (Step-by-Step)
+1.Audio Loading
+  Loads IRMAS WAV files and converts them to mono at 22.05 kHz.
+2.Silence Trimming
+  Removes non-informative silent regions to improve feature quality.
+3.Duration Fixing
+  Pads or truncates audio to exactly 3 seconds, ensuring uniform input.
+4.Normalization
+  Standardizes amplitude for stable CNN training.
+5.Data Augmentation
+  Pitch shifting
+  Time stretching
+  Noise addition
+  Improves generalization and robustness.
+6.Mel-Spectrogram Extraction
+  Converts audio into 128×128 mel-spectrograms, ideal for CNNs.
+7.Feature Saving
+  Saves CNN-ready tensors (.npy) for fast training.
+
+An end-to-end audio data pipeline was designed and implemented. The pipeline includes audio loading, silence trimming, duration fixing, amplitude normalization, data augmentation, and mel-spectrogram feature extraction. The processed and augmented features are converted into fixed-size mel-spectrogram tensors and saved in NumPy format, making them directly usable for CNN-based instrument classification.
 
