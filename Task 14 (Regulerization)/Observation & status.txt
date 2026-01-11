@@ -6,3 +6,12 @@ We will use 3 types of regularization:
 Note: Regularization techniques were incorporated into the CNN model to reduce overfitting and improve generalization. 
 L2 weight regularization was applied to convolutional and dense layers, dropout was used in the fully connected layer, and batch normalization was added after convolutional layers. 
 Early stopping and learning rate reduction callbacks were employed to further stabilize training.
+
+| Technique               | Where Used            | Purpose                 |
+| ----------------------- | --------------------- | ----------------------- |
+| **L2 Regularization**   | Conv & Dense layers   | Penalizes large weights |
+| **Dropout (0.5)**       | Fully connected layer | Prevents co-adaptation  |
+| **Batch Normalization** | After Conv layers     | Stabilizes learning     |
+| **EarlyStopping**       | Callback              | Stops overfitting       |
+| **ReduceLROnPlateau**   | Callback              | Adaptive learning rate  |
+
