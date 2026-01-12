@@ -1,0 +1,137 @@
+{
+    "metadata": {
+        "task": "Music Instrument Recognition",
+        "model_type": "CNN",
+        "classification": "Multilabel",
+        "input_features": "Mel-spectrogram",
+        "num_classes": 11
+    },
+    "model_configuration": {
+        "segment_duration_sec": 2.0,
+        "hop_duration_sec": 1.0,
+        "aggregation_method": "Top-K Aggregation (K=3, mean)",
+        "threshold_type": "Per-instrument (tuned)"
+    },
+    "audio_file": "01 - Inolvidable-9.wav",
+    "sample_rate": 16000,
+    "segments": [
+        {
+            "segment_index": 0,
+            "start_time_sec": 0.0,
+            "end_time_sec": 2.0,
+            "probabilities": {
+                "cel": 0.06642144173383713,
+                "cla": 0.0645233616232872,
+                "flu": 0.09586352109909058,
+                "gac": 0.05849093571305275,
+                "gel": 0.1380656212568283,
+                "org": 0.02806057780981064,
+                "pia": 0.08091671019792557,
+                "sax": 0.47229811549186707,
+                "tru": 0.65911465883255,
+                "vio": 0.10243537276983261,
+                "voi": 0.02351931668817997
+            }
+        },
+        {
+            "segment_index": 1,
+            "start_time_sec": 1.0,
+            "end_time_sec": 3.0,
+            "probabilities": {
+                "cel": 0.05359248071908951,
+                "cla": 0.06248172000050545,
+                "flu": 0.09351473301649094,
+                "gac": 0.041675157845020294,
+                "gel": 0.10814177989959717,
+                "org": 0.023457402363419533,
+                "pia": 0.06742144376039505,
+                "sax": 0.47842836380004883,
+                "tru": 0.7071029543876648,
+                "vio": 0.09034058451652527,
+                "voi": 0.016807561740279198
+            }
+        },
+        {
+            "segment_index": 2,
+            "start_time_sec": 2.0,
+            "end_time_sec": 4.0,
+            "probabilities": {
+                "cel": 0.06042724475264549,
+                "cla": 0.07420674711465836,
+                "flu": 0.09472917765378952,
+                "gac": 0.0509730689227581,
+                "gel": 0.08420953899621964,
+                "org": 0.02961248904466629,
+                "pia": 0.07141324132680893,
+                "sax": 0.4519657492637634,
+                "tru": 0.756876528263092,
+                "vio": 0.10400429368019104,
+                "voi": 0.014718985185027122
+            }
+        },
+        {
+            "segment_index": 3,
+            "start_time_sec": 3.0,
+            "end_time_sec": 5.0,
+            "probabilities": {
+                "cel": 0.08723508566617966,
+                "cla": 0.06436443328857422,
+                "flu": 0.10754416137933731,
+                "gac": 0.07671491801738739,
+                "gel": 0.13593937456607819,
+                "org": 0.025827880948781967,
+                "pia": 0.10346733033657074,
+                "sax": 0.45967191457748413,
+                "tru": 0.6455978751182556,
+                "vio": 0.12983380258083344,
+                "voi": 0.02685289829969406
+            }
+        }
+    ],
+    "aggregated_prediction": {
+        "cel": {
+            "probability": 0.0713612511754036,
+            "predicted": 0
+        },
+        "cla": {
+            "probability": 0.06769818067550659,
+            "predicted": 0
+        },
+        "flu": {
+            "probability": 0.09937895089387894,
+            "predicted": 0
+        },
+        "gac": {
+            "probability": 0.062059640884399414,
+            "predicted": 0
+        },
+        "gel": {
+            "probability": 0.12738226354122162,
+            "predicted": 0
+        },
+        "org": {
+            "probability": 0.02783364988863468,
+            "predicted": 0
+        },
+        "pia": {
+            "probability": 0.08526575565338135,
+            "predicted": 0
+        },
+        "sax": {
+            "probability": 0.4701327979564667,
+            "predicted": 1
+        },
+        "tru": {
+            "probability": 0.7076980471611023,
+            "predicted": 1
+        },
+        "vio": {
+            "probability": 0.11209116131067276,
+            "predicted": 0
+        },
+        "voi": {
+            "probability": 0.022393258288502693,
+            "predicted": 0
+        }
+    }
+}
