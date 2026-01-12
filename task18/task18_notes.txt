@@ -1,0 +1,10 @@
+Task 18 – Instrument Timeline Plot
+
+An instrument timeline was generated for a single audio clip
+containing multiple instruments.
+
+Model confidence values were plotted over time for Guitar and Piano.
+Raw audio waveforms were not used.
+
+The timeline clearly shows when each instrument is active based on
+model predictions, with a confidence threshold for clarity.
