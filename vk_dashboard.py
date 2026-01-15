@@ -19,7 +19,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 # ==========================================
 # 0. SESSION STATE INITIALIZATION
 # ==========================================
@@ -32,7 +31,6 @@ if 'email' not in st.session_state:
 
 def login():
     st.session_state['logged_in'] = True
-
 # ==========================================
 # 2. GLOBAL CONSTANTS
 # ==========================================
@@ -51,15 +49,20 @@ READABLE_NAMES = [
 ]
 
 # ==========================================
-# 3. ADVANCED CSS STYLING (RESPONSIVE)
+# 3. ADVANCED CSS STYLING
 # ==========================================
 def set_style(image_file):
-    # 1. Handle Background Image
-    bg_css = ""
-    if os.path.exists(image_file):
-        with open(image_file, "rb") as file:
-            encoded_string = base64.b64encode(file.read()).decode()
-        bg_css = f"""
+    if not os.path.exists(image_file):
+        st.error(f"⚠️ ERROR: File '{image_file}' not found.")
+        return
+
+    with open(image_file, "rb") as file:
+        encoded_string = base64.b64encode(file.read()).decode()
+
+    st.markdown(
+        f"""
+        <style>
+        /* 1. BACKGROUND */
         .stApp {{
             background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(data:image/jpeg;base64,{encoded_string});
             background-size: cover;
@@ -67,21 +70,6 @@ def set_style(image_file):
             background-repeat: no-repeat;
             background-attachment: fixed;
         }}
-        """
-    else:
-        # Fallback to a dark background if image is missing
-        bg_css = """
-        .stApp {
-            background-color: #0E1117;
-        }
-        """
-
-    # 2. Inject CSS (Now happens regardless of file existence)
-    st.markdown(
-        f"""
-        <style>
-        /* 1. BACKGROUND (Dynamic) */
-        {bg_css}
 
         /* 2. SIDEBAR (Glass Style) */
         [data-testid="stSidebar"] {{
@@ -90,12 +78,14 @@ def set_style(image_file):
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }}
 
-        /* 3. REFINED TITLE (Responsive) */
+        /* 3. REFINED TITLE (Smaller & Cleaner) */
         .main-title {{
             font-family: 'Segoe UI', sans-serif;
-            font-size: clamp(2.0rem, 5vw, 3.0rem); 
-            font-weight: 700;
+            font-size: 3.0rem; /* Reduced from 3.8rem to look less 'broad' */
+            font-weight: 700;  /* Reduced boldness */
             margin-bottom: 5px;
+            
+            /* Light Color + Neon Glow */
             color: #E0FFFF !important; 
             text-shadow: 0px 0px 10px rgba(0, 201, 255, 0.8), 
                          0px 0px 20px rgba(0, 255, 127, 0.6);
@@ -103,16 +93,23 @@ def set_style(image_file):
 
         /* 4. SLIMMER, TRANSPARENT UPLOADER */
         [data-testid="stFileUploader"] {{
+            /* Matches Sidebar Style Exactly */
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
-            padding: 10px 15px;
+            
+            /* Reduced Height via Padding */
+            padding: 10px 15px; /* Less vertical padding */
             transition: box-shadow 0.3s ease;
         }}
+        
+        /* Remove the inner grey background specific to Streamlit's dropzone */
         [data-testid="stFileUploader"] section {{
             background-color: transparent !important;
         }}
+
+        /* Hover Effect for Uploader */
         [data-testid="stFileUploader"]:hover {{
             box-shadow: 0 0 15px rgba(0, 201, 255, 0.3);
             border-color: rgba(0, 201, 255, 0.5);
@@ -123,7 +120,7 @@ def set_style(image_file):
             background-color: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
-            padding: 10px 15px;
+            padding: 10px 15px; /* Matches uploader padding */
             backdrop-filter: blur(10px);
             margin-top: 10px;
         }}
@@ -168,7 +165,7 @@ def set_style(image_file):
         .main .block-container {{ animation: fadeIn 1.0s ease-in-out; }}
         @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
 
-        /* 9. LOGIN & TRANSITIONS (RESPONSIVE) */
+        /* 9. LOGIN & TRANSITIONS (NEW ADDITION) */
         @keyframes slideUp {{
             from {{ opacity: 0; transform: translateY(50px); }}
             to {{ opacity: 1; transform: translateY(0); }}
@@ -180,12 +177,8 @@ def set_style(image_file):
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            
-            /* RESPONSIVE WIDTH & MARGIN */
-            width: 90%;          /* 90% width on mobile */
-            max-width: 400px;    /* Max 400px on desktop */
-            margin: 10vh auto;   /* Vertical margin adapts to screen height */
-            
+            max-width: 400px;
+            margin: 100px auto; /* Centers it */
             box-shadow: 0 0 20px rgba(0, 201, 255, 0.2);
         }}
         
@@ -214,20 +207,7 @@ def set_style(image_file):
             font-size: 0.85rem;
             color: #aaa !important;
         }}
-        
-        /* 10. MOBILE SPECIFIC ADJUSTMENTS */
-        @media only screen and (max-width: 600px) {{
-            [data-testid="column"] {{
-                width: 100% !important;
-                flex: 1 1 auto !important;
-                min-width: 100% !important;
-            }}
-            .block-container {{
-                padding-top: 2rem !important;
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
-            }}
-        }}
+
         </style>
         """,
         unsafe_allow_html=True
@@ -328,11 +308,7 @@ def plot_timeline(timeline_df, threshold):
     return fig
 
 # ==========================================
-# 6. LOGIN PAGE (RESPONSIVE)
-# ==========================================
-# ==========================================
-# 6. LOGIN PAGE (FIXED)
-# ==========================================
+#login page
 def login_page():
     # 1. Load and Encode Logo
     logo_b64 = ""
@@ -340,41 +316,35 @@ def login_page():
         with open(LOGO_PATH, "rb") as f:
             logo_b64 = base64.b64encode(f.read()).decode()
     
-    # 2. Define the HTML for the Header (Cleaned - No Comments)
+    # 2. Define the HTML for the Header
+    # UPDATES:
+    # - Added 'box-shadow' for the neon glow effect
+    # - This single block contains both the logo and text
     header_html = f"""
     <div style="
         display: flex; 
         align-items: center; 
         justify-content: center; 
-        flex-wrap: wrap;
         background-color: rgba(0, 0, 0, 0.5); 
         padding: 20px 40px; 
         border-radius: 15px; 
         margin-bottom: 30px; 
         backdrop-filter: blur(10px); 
         border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 20px rgba(0, 201, 255, 0.2);
+        box-shadow: 0 0 20px rgba(0, 201, 255, 0.2); /* The Glow Effect */
         width: fit-content;
-        max-width: 90%;
         margin-left: auto;
         margin-right: auto;
     ">
         <img src="data:image/jpeg;base64,{logo_b64}" 
-             style="
-                border-radius: 50%; 
-                object-fit: cover; 
-                margin-right: 20px; 
-                border: 2px solid rgba(255,255,255,0.2);
-                width: clamp(40px, 10vw, 60px); 
-                height: clamp(40px, 10vw, 60px);
-             ">
+             style="border-radius: 50%; width: 60px; height: 60px; object-fit: cover; margin-right: 20px; border: 2px solid rgba(255,255,255,0.2);">
         <h1 style="
             font-family: 'Segoe UI', sans-serif; 
+            font-size: 2.5rem; 
             font-weight: 700; 
             margin: 0;
             color: #E0FFFF; 
             text-shadow: 0px 0px 10px rgba(0, 201, 255, 0.8), 0px 0px 20px rgba(0, 255, 127, 0.6);
-            font-size: clamp(1.5rem, 5vw, 2.5rem);
         ">
             InstruNetAI
         </h1>
@@ -387,6 +357,8 @@ def login_page():
     with col2:
         # Render the Header
         st.markdown(header_html, unsafe_allow_html=True)
+        
+        # --- IF YOU HAD EXTRA CODE HERE CREATING THE BLACK BOX, IT IS NOW GONE ---
         
         # The Login Form Container
         #st.markdown('<div class="login-container">', unsafe_allow_html=True)
@@ -403,42 +375,38 @@ def login_page():
                     st.session_state['username'] = user
                     st.session_state['email'] = mail
                     login()
-                    try:
-                        st.rerun()
-                    except AttributeError:
-                        st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.error("Please fill in both fields.")
         
         st.markdown('</div>', unsafe_allow_html=True)
-
 # ==========================================
-# 7. MAIN APP LAYOUT
+# 6. MAIN APP LAYOUT
 # ==========================================
 
 # 1. APPLY STYLE
 set_style(BG_IMAGE_PATH)
 
-# CHECK LOGIN STATUS
+# [INSERT AT LINE 242]
 if not st.session_state['logged_in']:
     login_page()
-    st.stop() # Stops execution here if not logged in
+    st.stop() # This halts the script here so the dashboard doesn't load
 
-# 2. DASHBOARD HEADER (Responsive)
+# 2. HEADER
 col_logo, col_title = st.columns([1, 6])
 with col_logo:
     try:
-        # Logo will automatically resize due to 'use_container_width=True'
         st.image(LOGO_PATH, use_container_width=True)
     except:
         pass
 with col_title:
-    # Responsive Title Class Applied
+    # Updated Title (Slimmer font, bright color)
     st.markdown('<h1 class="main-title">InstruNetAI Dashboard</h1>', unsafe_allow_html=True)
     st.caption("Advanced Polyphonic Audio Recognition System")
 
-# 3. SIDEBAR (With Profile)
+# 3. SIDEBAR
 with st.sidebar:
+    # [INSERT AT LINE 256, INSIDE with st.sidebar:]
     st.markdown(f"""
     <div class="user-profile">
         <div class="user-name">{st.session_state['username']}</div>
@@ -455,6 +423,7 @@ with st.sidebar:
 uploaded_file = st.file_uploader("📂 Upload Audio Track (WAV/MP3)", type=['wav', 'mp3'])
 
 if uploaded_file:
+    # Audio Player appears below uploader (Classic Vertical Layout)
     st.audio(uploaded_file)
     
     model = load_model()
@@ -479,8 +448,7 @@ if uploaded_file:
         status_text.empty()
         progress_bar.empty()
 
-        # RESULTS GRID (Responsive Columns)
-        # Columns will naturally stack on mobile, but we reinforce it with CSS media queries
+        # RESULTS GRID (2:1 Ratio)
         col1, col2 = st.columns([2, 1])
 
         with col1:
@@ -504,6 +472,7 @@ if uploaded_file:
             if filtered:
                 for name, score in filtered:
                     pct = int(score * 100)
+                    # ANIMATED BAR
                     st.markdown(f"""
                         <div class="instrument-label">{name}</div>
                         <div class="progress-container">
@@ -528,4 +497,5 @@ if uploaded_file:
             st.markdown(create_download_link(report, "instrunet_analysis.json"), unsafe_allow_html=True)
 
 elif not uploaded_file:
+    # Optional: Welcome message at the bottom if nothing is uploaded yet
     st.info("👋 Welcome to InstruNet AI! Please upload a file to begin.")
