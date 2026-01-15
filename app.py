@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 # --- CONFIGURATION ---
 # Ensure this points to the model created by train_robust.py
-MODEL_PATH = 'instrunet_robust_model.keras' 
+MODEL_PATH = 'vk_multilabel_model.keras' 
 IMG_HEIGHT = 128
 IMG_WIDTH = 128
 SR = 16000
