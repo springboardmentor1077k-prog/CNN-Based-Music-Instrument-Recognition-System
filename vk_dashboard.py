@@ -36,7 +36,7 @@ def login():
 # ==========================================
 BG_IMAGE_PATH = 'background.jpeg'
 LOGO_PATH = 'logo.jpeg'
-MODEL_PATH = 'vk_multilabel_model.keras'
+MODEL_PATH = 'vk_boosted_reg_model.keras'
 
 IMG_HEIGHT = 128
 IMG_WIDTH = 128
