@@ -53,8 +53,15 @@ LOGO_PATH = 'logo.jpeg'
 MODEL_PATH = 'vk_boosted_reg_model.keras'
 
 # --- EMAIL CONFIGURATION (FILL THIS) ---
-SENDER_EMAIL = "vaibhavakanna07@gmail.com"
-SENDER_PASSWORD = "ocrg sdwz wzrs iblv" # <--- PASTE YOUR 16-CHAR APP PASSWORD HERE
+# --- EMAIL CONFIGURATION ---
+# We fetch these from Streamlit Secrets (Secure Cloud Storage)
+try:
+    SENDER_EMAIL = st.secrets["email_username"]
+    SENDER_PASSWORD = st.secrets["email_password"]
+except:
+    st.error("⚠️ Email secrets not set! Please configure them in Streamlit Cloud.")
+    SENDER_EMAIL = ""
+    SENDER_PASSWORD = "" # <--- PASTE YOUR 16-CHAR APP PASSWORD HERE
 
 IMG_HEIGHT = 128
 IMG_WIDTH = 128
