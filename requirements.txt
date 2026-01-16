@@ -10,3 +10,5 @@ tensorflow
 pandas
 seaborn
 scikit-learn
+fpdf
+streamlit

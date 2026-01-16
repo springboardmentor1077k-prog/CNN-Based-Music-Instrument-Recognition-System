@@ -6,10 +6,20 @@ import librosa
 import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
+from fpdf import FPDF
+import tempfile
+import base64
+from datetime import datetime
 
 # --- Configuration ---
 USER_DB_FILE = "users.json"
 APP_TITLE = "Instrunet AI Dashboard"
+CLASS_NAMES = ['cel', 'cla', 'flu', 'gac', 'gel', 'org', 'pia', 'sax', 'tru', 'vio', 'voi']
+INSTRUMENT_MAP = {
+    'cel': 'Cello', 'cla': 'Clarinet', 'flu': 'Flute', 'gac': 'Acoustic Guitar',
+    'gel': 'Electric Guitar', 'org': 'Organ', 'pia': 'Piano', 'sax': 'Saxophone',
+    'tru': 'Trumpet', 'vio': 'Violin', 'voi': 'Voice'
+}
 
 # --- Authentication Functions ---
 
@@ -55,14 +65,127 @@ def login(username, password):
 
 # --- Visualization Functions ---
 
+def plot_waveform(y, sr):
+    fig, ax = plt.subplots(figsize=(10, 2))
+    librosa.display.waveshow(y, sr=sr, ax=ax)
+    ax.set_title('Waveform (Amplitude over Time)')
+    plt.tight_layout()
+    return fig
+
 def plot_mel_spectrogram(y, sr):
     fig, ax = plt.subplots(figsize=(10, 4))
     M = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, power=1.0)
     M_db = librosa.amplitude_to_db(M, ref=np.max)
     img = librosa.display.specshow(M_db, sr=sr, x_axis='time', y_axis='mel', ax=ax)
     fig.colorbar(img, ax=ax, format='%+2.0f dB')
-    ax.set_title('Mel Spectrogram (Amplitude)')
+    ax.set_title('Mel Spectrogram (Frequency-Domain)')
+    plt.tight_layout()
     return fig
+
+# --- Export Logic ---
+
+def generate_json_report(result_obj):
+    return json.dumps(result_obj, indent=4)
+
+class PDFReport(FPDF):
+    def header(self):
+        self.set_font('Arial', 'B', 15)
+        self.cell(0, 10, 'Instrunet AI - Instrument Detection Report', 0, 1, 'C')
+        self.ln(10)
+
+    def chapter_title(self, title):
+        self.set_font('Arial', 'B', 12)
+        self.cell(0, 10, title, 0, 1, 'L')
+        self.ln(4)
+
+    def chapter_body(self, body):
+        self.set_font('Arial', '', 10)
+        self.multi_cell(0, 5, body)
+        self.ln()
+
+def generate_pdf_report(result_obj, plots=None):
+    pdf = PDFReport()
+    pdf.add_page()
+    
+    # Metadata
+    pdf.chapter_title("1. Project & File Details")
+    details = (f"File Name: {result_obj['metadata']['filename']}\n"
+               f"Duration: {result_obj['metadata']['duration']:.2f}s\n"
+               f"Analysis Date: {result_obj['metadata']['date']}\n"
+               f"Model Threshold: {result_obj['threshold']}")
+    pdf.chapter_body(details)
+    
+    # Summary
+    pdf.chapter_title("2. Detected Instruments Summary")
+    detected = [p['instrument'] for p in result_obj['predictions'] if p['detected']]
+    summary_text = f"Instruments identified: {', '.join(detected) if detected else 'None'}"
+    pdf.chapter_body(summary_text)
+    
+    # Narrative
+    pdf.chapter_title("3. Analysis Narrative")
+    narrative = ("The audio file was processed using the Instrunet AI CNN model. "
+                 "Spectral features were extracted to identify unique harmonic patterns "
+                 "associated with various musical instruments.")
+    pdf.chapter_body(narrative)
+
+    # Predictions Table
+    pdf.chapter_title("4. Detailed Confidence Scores")
+    pdf.set_font('Arial', 'B', 10)
+    pdf.cell(60, 10, "Instrument", 1)
+    pdf.cell(60, 10, "Confidence", 1)
+    pdf.cell(60, 10, "Status", 1)
+    pdf.ln()
+    
+    pdf.set_font('Arial', '', 10)
+    for p in result_obj['predictions']:
+        pdf.cell(60, 10, p['instrument'], 1)
+        pdf.cell(60, 10, f"{p['confidence']*100:.1f}%", 1)
+        pdf.cell(60, 10, "Detected" if p['detected'] else "Not Detected", 1)
+        pdf.ln()
+
+    # Add plots if provided (as file paths)
+    if plots:
+        pdf.add_page()
+        pdf.chapter_title("5. Visualizations")
+        for plot_path in plots:
+            pdf.image(plot_path, x=10, w=180)
+            pdf.ln(10)
+
+    return pdf.output(dest='S').encode('latin-1')
+
+# --- Mock Inference ---
+
+def run_mock_inference(filename, y, sr):
+    # This simulates the "Single Source of Truth" result object
+    # In a real app, this would call model.predict()
+    threshold = 0.4
+    predictions = []
+    
+    for code in CLASS_NAMES:
+        conf = np.random.random() * 0.9 # Random confidence
+        # Mocking specific detection for demo purposes
+        if code in ['pia', 'gel']: conf = 0.8 + (np.random.random() * 0.1)
+        
+        predictions.append({
+            "instrument": INSTRUMENT_MAP.get(code, code),
+            "confidence": float(conf),
+            "detected": bool(conf >= threshold)
+        })
+    
+    # Sort by confidence
+    predictions = sorted(predictions, key=lambda x: x['confidence'], reverse=True)
+    
+    result = {
+        "metadata": {
+            "filename": filename,
+            "duration": float(librosa.get_duration(y=y, sr=sr)),
+            "sample_rate": int(sr),
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        },
+        "predictions": predictions,
+        "threshold": threshold
+    }
+    return result
 
 # --- UI Components ---
 
@@ -122,37 +245,154 @@ def signup_page():
             st.rerun()
 
 def dashboard_page():
-    st.sidebar.title(f"Welcome, {st.session_state['username']}")
+    st.sidebar.title(f"👤 {st.session_state['username']}")
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['username'] = None
+        st.session_state['prediction_result'] = None
         st.rerun()
     
-    st.title("Audio Analysis Dashboard")
-    st.write("Upload a music file to analyze its spectral content.")
+    st.title("🎵 Audio Analysis Dashboard")
     
-    uploaded_file = st.file_uploader("Choose an audio file", type=['wav', 'mp3'])
+    # 1. Input & Controls Section
+    st.header("1. Input & Controls")
+    uploaded_file = st.file_uploader("Upload Audio (WAV/MP3)", type=['wav', 'mp3'])
     
     if uploaded_file is not None:
-        st.audio(uploaded_file, format='audio/wav')
+        # Load audio data into session state to avoid re-loading
+        if 'audio_data' not in st.session_state or st.session_state.get('last_file') != uploaded_file.name:
+            y, sr = librosa.load(uploaded_file, sr=None)
+            st.session_state['audio_data'] = (y, sr)
+            st.session_state['last_file'] = uploaded_file.name
+            st.session_state['prediction_result'] = None # Clear old results
+
+        y, sr = st.session_state['audio_data']
         
-        if st.button("Generate Spectrogram"):
-            with st.spinner("Processing audio..."):
-                try:
-                    # Load audio (using librosa directly from the file object)
-                    # Note: librosa.load can take a file-like object
-                    y, sr = librosa.load(uploaded_file, sr=None)
-                    
-                    st.subheader("Mel Spectrogram")
-                    fig = plot_mel_spectrogram(y, sr)
-                    st.pyplot(fig)
-                    
-                except Exception as e:
-                    st.error(f"Error processing audio: {e}")
+        col_audio, col_btn = st.columns([3, 1])
+        with col_audio:
+            st.audio(uploaded_file)
+        with col_btn:
+            st.write(" ") # Padding
+            if st.button("🚀 Run Prediction", use_container_width=True):
+                with st.spinner("Analyzing instruments..."):
+                    # Step 1: Create Result Object (Single Source of Truth)
+                    res = run_mock_inference(uploaded_file.name, y, sr)
+                    st.session_state['prediction_result'] = res
+                    st.success("Analysis Complete!")
+
+        # 2. Audio Visualization Section
+        st.divider()
+        st.header("2. Audio Visualization")
+        tab1, tab2 = st.tabs(["Waveform", "Spectrogram"])
+        
+        with tab1:
+            fig_wav = plot_waveform(y, sr)
+            st.pyplot(fig_wav)
+            # Store plot for PDF
+            st.session_state['plot_wav_path'] = os.path.join(tempfile.gettempdir(), "temp_wav.png")
+            fig_wav.savefig(st.session_state['plot_wav_path'])
+
+        with tab2:
+            fig_spec = plot_mel_spectrogram(y, sr)
+            st.pyplot(fig_spec)
+            # Store plot for PDF
+            st.session_state['plot_spec_path'] = os.path.join(tempfile.gettempdir(), "temp_spec.png")
+            fig_spec.savefig(st.session_state['plot_spec_path'])
+
+        # 3. Prediction Results Section
+        if st.session_state.get('prediction_result'):
+            st.divider()
+            st.header("3. Prediction Results")
+            res = st.session_state['prediction_result']
+            
+            # Summary
+            detected = [p['instrument'] for p in res['predictions'] if p['detected']]
+            st.subheader("Detected Instruments")
+            if detected:
+                cols = st.columns(len(detected))
+                for i, inst in enumerate(detected):
+                    cols[i].success(f"✅ {inst}")
+            else:
+                st.info("No instruments detected above the threshold.")
+
+            # Confidence Visualization
+            st.subheader("Confidence Scores")
+            for p in res['predictions']:
+                color = "green" if p['detected'] else "gray"
+                # Accessibility: Label says clearly what it is
+                label = f"{p['instrument']} ({p['confidence']*100:.1f}%)"
+                st.progress(p['confidence'], text=label)
+            
+            # Export Buttons (Only appear after prediction)
+            st.divider()
+            st.subheader("📤 Export Results")
+            col_json, col_pdf = st.columns(2)
+            
+            with col_json:
+                json_data = generate_json_report(res)
+                st.download_button(
+                    label="📄 Download JSON (Facts)",
+                    data=json_data,
+                    file_name=f"analysis_{uploaded_file.name}.json",
+                    mime="application/json"
+                )
+            
+            with col_pdf:
+                # Generate PDF using session state data
+                pdf_bytes = generate_pdf_report(res, plots=[
+                    st.session_state.get('plot_wav_path'),
+                    st.session_state.get('plot_spec_path')
+                ])
+                st.download_button(
+                    label="📕 Download PDF Report (Story)",
+                    data=pdf_bytes,
+                    file_name=f"report_{uploaded_file.name}.pdf",
+                    mime="application/pdf"
+                )
+
+    # 4. Power User Section (Model Metrics)
+    st.divider()
+    with st.expander("🔧 Model Performance Metrics (Power Users)"):
+        st.write("These metrics represent the overall performance of the model on the test dataset.")
+        
+        # Paths to static assets
+        outputs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "outputs")
+        conf_matrix_path = os.path.join(outputs_dir, "normalized_confusion_matrix.png")
+        roc_path = os.path.join(outputs_dir, "roc_curves.png")
+        report_path = os.path.join(outputs_dir, "classification_report.csv")
+
+        # 1. Classification Report (Table)
+        if os.path.exists(report_path):
+            st.subheader("Global Classification Report")
+            try:
+                import pandas as pd
+                df_metrics = pd.read_csv(report_path)
+                st.dataframe(df_metrics, use_container_width=True)
+            except Exception as e:
+                st.error(f"Could not load metrics table: {e}")
+        
+        # 2. Visualizations (Columns)
+        col_m1, col_m2 = st.columns(2)
+        
+        with col_m1:
+            st.subheader("Confusion Matrix")
+            if os.path.exists(conf_matrix_path):
+                st.image(conf_matrix_path, caption="Normalized Confusion Matrix", use_column_width=True)
+            else:
+                st.warning("Confusion Matrix image not found.")
+
+        with col_m2:
+            st.subheader("ROC Curves")
+            if os.path.exists(roc_path):
+                st.image(roc_path, caption="Receiver Operating Characteristic (ROC)", use_column_width=True)
+            else:
+                st.warning("ROC Curves image not found.")
 
 # --- Main App Logic ---
 
 def main():
+    st.set_page_config(page_title=APP_TITLE, page_icon="🎵", layout="wide")
+    
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
     
