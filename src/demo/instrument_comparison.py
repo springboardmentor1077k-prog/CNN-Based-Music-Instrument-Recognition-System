@@ -1,4 +1,9 @@
 import os
+import sys
+
+# Add src to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 import matplotlib.pyplot as plt
 import librosa
 import librosa.display

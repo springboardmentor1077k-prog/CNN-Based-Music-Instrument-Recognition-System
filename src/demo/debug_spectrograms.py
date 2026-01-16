@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 # Add src to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from audio_preprocessor import process_audio_file
 from visualizer import save_mel_spectrogram
