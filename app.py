@@ -36,10 +36,12 @@ if "visualizations" not in st.session_state:
 # AUTHENTICATION
 # ==================================================
 
-# Use environment variable for password, fallback to default for development
-# In production, set INSTRUNET_PASSWORD environment variable
-DEFAULT_PASSWORD = "instrunet2025"
-SHARED_PASSWORD = os.environ.get("INSTRUNET_PASSWORD", DEFAULT_PASSWORD)
+# OPTION 1: Skip authentication entirely (set to True to enable quick access)
+SKIP_AUTH = os.environ.get("SKIP_AUTH", "false").lower() == "true"
+
+# OPTION 2: Use environment variable for password (no hardcoding in production)
+# Set INSTRUNET_PASSWORD environment variable to enable password protection
+SHARED_PASSWORD = os.environ.get("INSTRUNET_PASSWORD", None)
 
 # ==================================================
 # LOGIN PAGE
@@ -75,7 +77,12 @@ def login_page():
         # Login form
         with st.form("login_form"):
             username = st.text_input("Your Name", placeholder="Enter your name")
-            password = st.text_input("Password", type="password", placeholder="Enter password")
+            
+            # Only show password field if password is configured
+            if SHARED_PASSWORD:
+                password = st.text_input("Password", type="password", placeholder="Enter password")
+            else:
+                password = None
             
             col_a, col_b, col_c = st.columns([1, 2, 1])
             with col_b:
@@ -84,7 +91,7 @@ def login_page():
             if submitted:
                 if not username.strip():
                     st.error("❌ Please enter your name")
-                elif password != SHARED_PASSWORD:
+                elif SHARED_PASSWORD and password != SHARED_PASSWORD:
                     st.error("❌ Invalid password")
                 else:
                     st.session_state.authenticated = True
@@ -92,8 +99,11 @@ def login_page():
                     st.success("✅ Login successful! Redirecting...")
                     st.rerun()
         
-        # Info box
-        st.info("💡 **Demo Access**: Use password `instrunet2025`")
+        # Info box - only show if password is configured
+        if SHARED_PASSWORD:
+            st.info("💡 **Demo Access**: Contact admin for password")
+        else:
+            st.info("💡 **Quick Access**: Just enter your name to continue")
 
 # ==================================================
 # HELPER FUNCTIONS
@@ -199,13 +209,13 @@ def main_app():
             opacity: 0.9;
         }
         
-        /* User profile */
+        /* User profile - UPDATED: Removed role display */
         .user-profile {
             display: flex;
             align-items: center;
             gap: 12px;
             background: white;
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -214,7 +224,7 @@ def main_app():
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background: #667eea;
+            background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);
             color: white;
             display: flex;
             align-items: center;
@@ -234,18 +244,13 @@ def main_app():
             color: #1f2937;
         }
         
-        .user-role {
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
         /* Results section */
         .results-header {
-            background: #f9fafb;
+            background: #f0f9ff;
             padding: 1rem 1.5rem;
             border-radius: 8px;
             margin-bottom: 1rem;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #26a69a;
         }
         
         .results-header h3 {
@@ -260,12 +265,13 @@ def main_app():
             border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             text-align: center;
+            border-top: 3px solid #26a69a;
         }
         
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            color: #667eea;
+            color: #00897b;
         }
         
         .metric-label {
@@ -276,27 +282,112 @@ def main_app():
         
         /* Expandable section */
         .expandable-section {
-            background: #f9fafb;
+            background: #f0f9ff;
             border-radius: 8px;
             padding: 1rem;
             margin-top: 1rem;
         }
         
-        /* Sidebar styles */
+        /* Sidebar styles - Pure grey with no whiteness */
         [data-testid="stSidebar"] {
-            background: #f9fafb;
+            background: linear-gradient(180deg, #c0c5ce 0%, #a0a8b0 100%);
+        }
+        
+        [data-testid="stSidebar"] > div:first-child {
+            background: linear-gradient(180deg, #c0c5ce 0%, #a0a8b0 100%);
+        }
+        
+        /* Sidebar content styling - Dark text for visibility */
+        [data-testid="stSidebar"] .stMarkdown {
+            color: #1a1d23 !important;
+        }
+        
+        [data-testid="stSidebar"] h3 {
+            color: #0d0f12 !important;
+            font-weight: 700;
+        }
+        
+        [data-testid="stSidebar"] label {
+            color: #1a1d23 !important;
+            font-weight: 500;
+        }
+        
+        [data-testid="stSidebar"] .stSelectbox label,
+        [data-testid="stSidebar"] .stSlider label {
+            color: #1a1d23 !important;
+        }
+        
+        /* Slider values visibility */
+        [data-testid="stSidebar"] .stSlider [data-baseweb="slider"] {
+            color: #1a1d23 !important;
+        }
+        
+        [data-testid="stSidebar"] .stSlider div[data-testid="stTickBar"] div {
+            color: #2c3138 !important;
+        }
+        
+        /* File uploader in sidebar */
+        [data-testid="stSidebar"] [data-testid="stFileUploader"] {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px dashed #8891a0;
+        }
+        
+        [data-testid="stSidebar"] [data-testid="stFileUploader"] label {
+            color: #1a1d23 !important;
+        }
+        
+        /* Success message in sidebar */
+        [data-testid="stSidebar"] .element-container .stSuccess {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid #48bb78;
+            padding: 0.75rem;
+            border-radius: 4px;
+        }
+        
+        [data-testid="stSidebar"] .element-container .stSuccess p {
+            color: #1a1d23 !important;
         }
         
         /* Button styles */
         .stButton > button {
             border-radius: 8px;
             font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .stButton > button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        /* Primary button color */
+        .stButton > button[kind="primary"] {
+            background: linear-gradient(135deg, #26a69a 0%, #00897b 100%);
+            border: none;
         }
         
         /* Download button styles */
         .stDownloadButton > button {
             border-radius: 8px;
             font-weight: 600;
+        }
+        
+        /* Tab styling */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        /* Audio player styling */
+        [data-testid="stAudio"] {
+            border-radius: 8px;
+            overflow: hidden;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -318,12 +409,12 @@ def main_app():
     with col_user:
         st.markdown("<br>", unsafe_allow_html=True)
         initial = st.session_state.user["username"][0].upper()
+        # UPDATED: Removed "Analyst" role display
         st.markdown(f"""
             <div class="user-profile">
                 <div class="user-avatar">{initial}</div>
                 <div class="user-info">
                     <div class="user-name">{st.session_state.user["username"]}</div>
-                    <div class="user-role">Analyst</div>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -381,7 +472,7 @@ def main_app():
         
         smoothing = st.slider(
             "Smoothing Window",
-            1, 7, 3, 2,
+            1, 7, 3, 1,
             help="Window size for temporal smoothing (higher = smoother)"
         )
         
@@ -503,7 +594,7 @@ def main_app():
             # Expandable: Full Probability View
             with st.expander("🔍 View All Class Probabilities", expanded=False):
                 st.markdown("""
-                    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                         <p style="margin: 0; color: #6b7280; font-size: 14px;">
                             <strong>Note:</strong> This view shows confidence scores for all instrument classes, 
                             regardless of the detection threshold. Values below the threshold are shown with 
@@ -558,7 +649,7 @@ def main_app():
             st.caption("Time-domain representation showing amplitude variations")
             
             fig_wav, ax = plt.subplots(figsize=(12, 3))
-            librosa.display.waveshow(y, sr=sr, ax=ax, color='#667eea')
+            librosa.display.waveshow(y, sr=sr, ax=ax, color='#26a69a')
             ax.set_xlabel("Time (seconds)", fontsize=11)
             ax.set_ylabel("Amplitude", fontsize=11)
             ax.grid(True, alpha=0.3)
@@ -625,7 +716,8 @@ def main_app():
             with col1:
                 st.markdown("""
                     <div style="background: white; padding: 1.5rem; border-radius: 12px; 
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.05); height: 100%;">
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.05); height: 100%;
+                                border-top: 3px solid #26a69a;">
                         <h4 style="margin-top: 0;">📄 JSON Export</h4>
                         <p style="color: #6b7280; font-size: 14px;">
                             Machine-readable format containing:
@@ -659,7 +751,8 @@ def main_app():
             with col2:
                 st.markdown("""
                     <div style="background: white; padding: 1.5rem; border-radius: 12px; 
-                                box-shadow: 0 2px 4px rgba(0,0,0,0.05); height: 100%;">
+                                box-shadow: 0 2px 4px rgba(0,0,0,0.05); height: 100%;
+                                border-top: 3px solid #26a69a;">
                         <h4 style="margin-top: 0;">📑 PDF Export</h4>
                         <p style="color: #6b7280; font-size: 14px;">
                             Professional report including:
@@ -746,7 +839,13 @@ def main_app():
 # ENTRY POINT
 # ==================================================
 
-if not st.session_state.authenticated:
+if SKIP_AUTH:
+    # Bypass authentication if SKIP_AUTH is enabled
+    if not st.session_state.authenticated:
+        st.session_state.authenticated = True
+        st.session_state.user = {"username": "User"}
+    main_app()
+elif not st.session_state.authenticated:
     login_page()
 else:
     main_app()
