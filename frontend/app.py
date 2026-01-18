@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-import numpy as np   # ✅ FIXED: numpy import added
+import numpy as np 
 import streamlit as st
 import json
 import tempfile
@@ -88,7 +88,7 @@ def dashboard():
 
     y, sr = librosa.load(audio_path, sr=16000)
     mel = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
-    mel_db = librosa.power_to_db(mel, ref=np.max)  # ✅ FIXED
+    mel_db = librosa.power_to_db(mel, ref=np.max) 
 
     fig, ax = plt.subplots(figsize=(10, 4))
     img = librosa.display.specshow(
