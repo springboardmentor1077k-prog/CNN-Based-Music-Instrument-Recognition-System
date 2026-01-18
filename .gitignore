@@ -7,3 +7,6 @@ __pycache__/
 
 # Optional: VSCode workspace settings
 .vscode/
+
+# Ignore ML model
+model/multilabel_cnn_improved.keras
