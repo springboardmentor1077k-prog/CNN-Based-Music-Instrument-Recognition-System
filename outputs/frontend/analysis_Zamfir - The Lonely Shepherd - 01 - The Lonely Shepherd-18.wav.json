@@ -1,0 +1,66 @@
+{
+    "metadata": {
+        "filename": "Zamfir - The Lonely Shepherd - 01 - The Lonely Shepherd-18.wav",
+        "duration": 7.6,
+        "sample_rate": 44100,
+        "date": "2026-01-16 20:54:48"
+    },
+    "predictions": [
+        {
+            "instrument": "Piano",
+            "confidence": 0.8608232160557745,
+            "detected": true
+        },
+        {
+            "instrument": "Electric Guitar",
+            "confidence": 0.8426173329901678,
+            "detected": true
+        },
+        {
+            "instrument": "Cello",
+            "confidence": 0.80718165007198,
+            "detected": true
+        },
+        {
+            "instrument": "Voice",
+            "confidence": 0.5913030770060138,
+            "detected": true
+        },
+        {
+            "instrument": "Violin",
+            "confidence": 0.43638811538679867,
+            "detected": true
+        },
+        {
+            "instrument": "Trumpet",
+            "confidence": 0.4256799231667914,
+            "detected": true
+        },
+        {
+            "instrument": "Organ",
+            "confidence": 0.3033216126698229,
+            "detected": false
+        },
+        {
+            "instrument": "Flute",
+            "confidence": 0.22640682567568415,
+            "detected": false
+        },
+        {
+            "instrument": "Saxophone",
+            "confidence": 0.1627591359985824,
+            "detected": false
+        },
+        {
+            "instrument": "Clarinet",
+            "confidence": 0.15841879227060549,
+            "detected": false
+        },
+        {
+            "instrument": "Acoustic Guitar",
+            "confidence": 0.0962447132047126,
+            "detected": false
+        }
+    ],
+    "threshold": 0.4
+}
