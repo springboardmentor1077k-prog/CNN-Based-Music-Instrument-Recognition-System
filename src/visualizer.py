@@ -52,6 +52,50 @@ def save_clean_spectrogram(y, sr, output_path):
     plt.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
     plt.close()
 
+def save_hpss_image(y, sr, output_path):
+    """
+    Performs HPSS (Harmonic-Percussive Source Separation) and saves a 
+    3-Channel RGB image:
+    - Red Channel: Harmonic Component
+    - Green Channel: Percussive Component
+    - Blue Channel: Original Spectrogram
+    
+    This creates a "data-rich" image for the CNN, allowing it to see 
+    timbre and rhythm separately.
+    """
+    # 1. Decompose Audio
+    y_harmonic, y_percussive = librosa.effects.hpss(y)
+    
+    # 2. Compute Mel Spectrograms (in dB)
+    def get_db_spec(audio_data):
+        m = librosa.feature.melspectrogram(y=audio_data, sr=sr, n_mels=128)
+        # Convert to dB, max is 0 dB
+        return librosa.amplitude_to_db(m, ref=np.max)
+
+    db_h = get_db_spec(y_harmonic)
+    db_p = get_db_spec(y_percussive)
+    db_o = get_db_spec(y)
+
+    # 3. Normalize to [0, 1] range for Image format
+    # We assume a dynamic range of 80 dB (standard for audio)
+    min_db = -80.0
+    max_db = 0.0
+    
+    def normalize(S):
+        return np.clip((S - min_db) / (max_db - min_db), 0, 1)
+
+    norm_h = normalize(db_h)
+    norm_p = normalize(db_p)
+    norm_o = normalize(db_o)
+
+    # 4. Stack into RGB Image (Height, Width, 3)
+    # librosa outputs (n_mels, time). Image expects (Height, Width, Channels).
+    # We flip vertically so low frequencies are at the bottom.
+    img_stack = np.dstack((np.flipud(norm_h), np.flipud(norm_p), np.flipud(norm_o)))
+    
+    # 5. Save directly using matplotlib's image save (handles the array->png conversion)
+    plt.imsave(output_path, img_stack)
+
 def plot_spectrograms(y, sr, file_name, output_dir):
     """
     Generates and plots STFT spectrogram, Mel spectrogram, and MFCCs.

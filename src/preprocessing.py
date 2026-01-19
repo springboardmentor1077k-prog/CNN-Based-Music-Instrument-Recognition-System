@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from audio_preprocessor import process_audio_file
 from augmentation import add_noise, pitch_shift, adjust_volume, time_shift
-from visualizer import save_clean_spectrogram
+from visualizer import save_clean_spectrogram, save_hpss_image
 
 def main():
     parser = argparse.ArgumentParser(description="Preprocess IRMAS dataset with Split-First strategy")
@@ -115,9 +115,9 @@ def main():
                         wav_path = os.path.join(out_audio_dir, wav_name)
                         spec_path = os.path.join(out_spec_dir, png_name)
                         
-                        # Save Audio & Spectrogram
+                        # Save Audio & HPSS Spectrogram
                         sf.write(wav_path, y_var, sr)
-                        save_clean_spectrogram(y_var, sr, spec_path)
+                        save_hpss_image(y_var, sr, spec_path)
 
                     processed_count += 1
                 else:

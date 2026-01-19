@@ -17,7 +17,7 @@ import librosa
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from audio_preprocessor import process_audio_file
-from visualizer import save_clean_spectrogram
+from visualizer import save_hpss_image
 
 def load_true_labels(txt_path):
     """Reads the label file and returns a list of instrument codes."""
@@ -143,7 +143,7 @@ def main():
             for win in res['windows']:
                 # Unique filename per window
                 temp_path = os.path.join(temp_dir, f"{res['wav_file']}_win_{count}.png")
-                save_clean_spectrogram(win, res['sr'], temp_path)
+                save_hpss_image(win, res['sr'], temp_path)
                 
                 try:
                     img = image.load_img(temp_path, target_size=(args.img_size, args.img_size))
