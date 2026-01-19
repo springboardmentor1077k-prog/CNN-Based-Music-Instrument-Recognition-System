@@ -64,3 +64,58 @@ if uploaded_file:
     ax2.set_ylabel("Mel Frequency")
     fig2.colorbar(img, ax=ax2, format="%+2.0f dB")
     st.pyplot(fig2, use_container_width=True)
+
+from pipeline import predict_stub
+from utils.results import build_result
+from utils.export import export_json, export_pdf
+import pandas as pd
+
+# ---- Predict Button ----
+st.divider()
+predict_clicked = st.button("Predict")
+
+if predict_clicked:
+    predictions = predict_stub()
+
+    result = build_result(
+        filename=uploaded_file.name,
+        duration=duration,
+        predictions=predictions
+    )
+
+    # ---- Prediction Results ----
+    st.header("Prediction Results")
+
+    # Primary result
+    for p in predictions:
+        status = "Detected" if p["detected"] else "Not Detected"
+        st.markdown(f"**{p['instrument']} – {status}**")
+
+    st.subheader("Confidence Levels")
+    for p in predictions:
+        st.progress(p["confidence"])
+
+    # Structured table
+    st.subheader("Detailed View")
+    df = pd.DataFrame(predictions)
+    st.table(df)
+
+    # Advanced view
+    with st.expander("View all probabilities"):
+        st.json(result["predictions"])
+
+    # ---- Exports ----
+    st.download_button(
+        "Download JSON",
+        export_json(result),
+        file_name="prediction_result.json",
+        mime="application/json"
+    )
+
+    pdf_buffer = export_pdf(result)
+    st.download_button(
+        "Download PDF Report",
+        pdf_buffer,
+        file_name="prediction_report.pdf",
+        mime="application/pdf"
+    )
