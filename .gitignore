@@ -1,33 +1,54 @@
-# --------------------
-# Python
-# --------------------
+# ======================
+# Python / Cache
+# ======================
 __pycache__/
 *.pyc
 *.pyo
 
-# --------------------
+# ======================
 # Virtual Environments
-# --------------------
+# ======================
 venv/
 .env/
 
-# --------------------
-# OS / Editor junk
-# --------------------
+# ======================
+# OS / Editor
+# ======================
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-# --------------------
-# Logs & temp
-# --------------------
-*.log
+# ======================
+# STREAMLIT
+# ======================
 .streamlit/
 
-# --------------------
-# DO NOT IGNORE THESE
-# --------------------
+# ======================
+# CNN DATA (CRITICAL)
+# ======================
+cnn_new/data/
+cnn_new/data/**
+cnn_new/data/mfcc/
+cnn_new/data/plots/
+
+# ======================
+# TRAINING ARRAYS
+# ======================
+cnn_new/features/X_*.npy
+cnn_new/features/y_*.npy
+
+# ======================
+# KEEP THESE
+# ======================
+!cnn_new/model_instrunet_phase2.keras
+!cnn_new/features/class_names.npy
+!cnn_new/label_mapping.json
+!cnn_new/label_encoder.pkl
+
+# ======================
+# DO NOT IGNORE CORE APPS
+# ======================
 !frontend/
 !backend/
 !cnn_new/
