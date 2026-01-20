@@ -1,20 +1,33 @@
-###############################
-# IGNORE ALL HEAVY PIPELINE DATA
-###############################
-
-pipeline/audio_clean/*
-pipeline/audio_augmented/*
-pipeline/augmented/*
-pipeline/mel/*
-pipeline/mfcc/*
-pipeline/clean_audio/*
-
-# ALLOW ONLY SAMPLE FILES
-!pipeline/sample_audio/*
-!pipeline/samples/**
-
-###############################
-# PYTHON
-###############################
+# --------------------
+# Python
+# --------------------
 __pycache__/
 *.pyc
+*.pyo
+
+# --------------------
+# Virtual Environments
+# --------------------
+venv/
+.env/
+
+# --------------------
+# OS / Editor junk
+# --------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --------------------
+# Logs & temp
+# --------------------
+*.log
+.streamlit/
+
+# --------------------
+# DO NOT IGNORE THESE
+# --------------------
+!frontend/
+!backend/
+!cnn_new/
