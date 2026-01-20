@@ -1,0 +1,37 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+# Load data again (no shuffle!)
+datagen = ImageDataGenerator(rescale=1./255)
+
+data = datagen.flow_from_directory(
+    "spectrograms",
+    target_size=(96,96),
+    batch_size=16,
+    class_mode="categorical",
+    shuffle=False
+)
+
+y_true = data.classes
+y_prob = model.predict(data)
+
+n_classes = len(data.class_indices)
+y_true_bin = label_binarize(y_true, classes=range(n_classes))
+
+plt.figure(figsize=(7,6))
+
+for i, class_name in enumerate(data.class_indices.keys()):
+    fpr, tpr, _ = roc_curve(y_true_bin[:, i], y_prob[:, i])
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, label=f"{class_name} (AUC = {roc_auc:.2f})")
+
+plt.plot([0,1], [0,1], linestyle="--")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve – Instrument Classification")
+plt.legend()
+plt.grid()
+plt.show()
