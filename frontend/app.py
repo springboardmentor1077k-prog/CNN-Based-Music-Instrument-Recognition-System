@@ -1,169 +1,312 @@
 import sys
 from pathlib import Path
-import numpy as np 
-import streamlit as st
-import json
 import tempfile
-import matplotlib.pyplot as plt
+import streamlit as st
 import librosa
-import librosa.display
+import matplotlib.pyplot as plt
 
-# -------------------------------------------------
-# backend import path
-# -------------------------------------------------
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.append(str(ROOT_DIR))
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(ROOT))
 
-from backend.api import run_inference
+from backend.pipeline import run_pipeline
+from backend.export import export_json, export_pdf
 
-# =================================================
-# PAGE CONFIG
-# =================================================
 st.set_page_config(
     page_title="InstruNet AI",
     layout="wide"
 )
 
-# =================================================
-# LOGIN PAGE
-# =================================================
+# ---------------- SESSION STATE ----------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "page" not in st.session_state:
+    st.session_state.page = "home"
+if "result" not in st.session_state:
+    st.session_state.result = None
+    
+# ---------------- STYLING ----------------
+st.markdown("""
+<style>
+
+/* ================= COLOR PALETTE ================= */
+:root {
+    --bg-main: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+    --bg-sidebar: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    --bg-card: rgba(255,255,255,0.95);
+    --white: #ffffff;
+    --white-soft: rgba(255,255,255,0.85);
+    --white-muted: rgba(255,255,255,0.65);
+    --dark: #111827;
+    --primary: #3b82f6;
+}
+
+/* ================= FULL BACKGROUND FIX ================= */
+html, body, [data-testid="stAppViewContainer"] {
+    background: var(--bg-main) !important;
+}
+
+header {
+    background: transparent !important;
+}
+
+/* ================= SIDEBAR ================= */
+[data-testid="stSidebar"] {
+    background: var(--bg-sidebar) !important;
+}
+
+/* ================= GLOBAL TEXT ================= */
+h1, h2, h3, h4, h5, h6,
+p, span, label, small,
+.stMarkdown, .stText, .stCaption {
+    color: white !important;
+}
+
+/* ================= INPUT LABELS ================= */
+[data-testid="stTextInput"] label,
+[data-testid="stTextInput"] span {
+    color: white !important;
+}
+
+/* ================= INPUT BOX ================= */
+input, textarea {
+    background: white !important;
+    color: var(--dark) !important;
+    border-radius: 12px !important;
+    border: none !important;
+    padding: 12px !important;
+}
+
+input:focus, textarea:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.45) !important;
+}
+
+/* ================= FILE UPLOADER ================= */
+[data-testid="stFileUploader"] {
+    background: white !important;
+    border-radius: 16px !important;
+    padding: 18px !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25) !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] * {
+    color: #111827 !important;
+}
+
+/* ================= POPUP MESSAGES ================= */
+.stAlert,
+.stSuccess,
+.stError,
+.stWarning,
+.stInfo {
+    background: rgba(59,130,246,0.18) !important;
+    color: white !important;
+    border-radius: 14px !important;
+}
+
+.stAlert * {
+    color: white !important;
+}
+
+/* ================= BUTTONS ================= */
+.stButton > button {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    color: white !important;
+    border-radius: 14px !important;
+    border: none !important;
+}
+
+/* ================= AUDIO ================= */
+[data-testid="stAudio"] {
+    border-radius: 14px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important;
+}
+
+/* ================= EXPANDERS ================= */
+.stExpanderHeader {
+    background: linear-gradient(135deg, #1e293b, #334155) !important;
+    color: white !important;
+}
+
+.stExpanderContent {
+    background: white !important;
+    color: var(--dark) !important;
+}
+
+/* ================= LAYOUT FIX ================= */
+.block-container {
+    padding-top: 2rem !important;
+}
+            
+/* ================= CENTER ALIGN BUTTONS ================= */
+.stButton {
+    display: flex !important;
+    justify-content: center !important;
+}
+
+.stButton > button {
+    min-width: 160px !important;
+}
+
+/* ================= DASHBOARD BUTTON TEXT FIX ================= */
+.stButton > button span {
+    color: white !important;
+}
+
+/* ================= SLIDER TEXT VISIBILITY ================= */
+[data-testid="stSlider"] * {
+    color: white !important;
+}
+
+/* Slider value (0.30) */
+[data-testid="stSlider"] .stSliderValue {
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+/* Slider min/max labels */
+[data-testid="stSlider"] .stMarkdown {
+    color: white !important;
+}
+
+/* ================= REMOVE SLIDER OUTLINE ================= */
+[data-testid="stSlider"] input {
+    outline: none !important;
+    box-shadow: none !important;
+}                                    
+
+/* ================= DOWNLOAD BUTTON TEXT FIX ================= */
+[data-testid="stDownloadButton"] button {
+    color: white !important;
+}
+
+[data-testid="stDownloadButton"] button span {
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+/* Optional: improve button look */
+[data-testid="stDownloadButton"] button {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border-radius: 14px !important;
+    padding: 12px 28px !important;
+    border: none !important;
+}
+            
+</style>
+""", unsafe_allow_html=True)
+
+
+# ---------------- STYLING ----------------
+
+# ---------------- HOME PAGE ----------------
+def home_page():
+    container = st.container()
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.markdown("<h1 style='text-align:center; color:#1E90FF'>🎵 InstruNet AI</h1>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align:center; color:#333'>Professional AI-Based Music Instrument Recognition</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#555'>Empower your audio analysis with AI-powered multi-instrument detection.<br>Upload audio, analyze segments, and get detailed confidence reports.</p>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Explore", key="explore"):
+            st.session_state.page = "login"
+            st.rerun()
+
+# ---------------- LOGIN PAGE ----------------
 def login_page():
-    st.title("🎵 InstruNet AI")
-    st.subheader("CNN-Based Music Instrument Recognition System")
-    st.caption("Upload audio • Analyze • Detect instruments")
-
-    st.markdown("---")
-
-    _, center, _ = st.columns([1, 2, 1])
-    with center:
+    container = st.container()
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        st.markdown("<h1 style='text-align:center; color:#6C63FF'>🎵 InstruNet AI</h1>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align:center; color:#333'>CNN-Based Music Instrument Recognition System</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#555'>Upload audio • Analyze • Detect instruments</p>", unsafe_allow_html=True)
+        st.markdown("---")
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-
-        if st.button("Login", use_container_width=True):
+        if st.button("Login", key="login"):
             if username.strip() and password.strip():
                 st.session_state.logged_in = True
                 st.session_state.user = username
+                st.session_state.page = "app"
+                st.success("Login successful")
                 st.rerun()
             else:
                 st.error("Username and password cannot be empty")
 
-# =================================================
-# DASHBOARD
-# =================================================
-def dashboard():
+# ---------------- DASHBOARD ----------------
+def main_app():
+    with st.sidebar:
+        # User info
+        st.markdown(f"<div style='text-align:center; margin-bottom:20px;'>"
+                    f"<div style='width:70px;height:70px;background-color:#1E90FF;border-radius:50%;display:flex;justify-content:center;align-items:center;font-size:28px;color:white;margin:0 auto;'>{st.session_state.user[0].upper()}</div>"
+                    f"<p style='text-align:center;margin-top:5px;font-weight:bold;'>{st.session_state.user}</p>"
+                    f"</div>", unsafe_allow_html=True)
 
-    # ---------- SIDEBAR ----------
-    st.sidebar.title("Dashboard")
-    st.sidebar.write(f"👤 {st.session_state.user}")
+        st.header("Controls")
+        audio = st.file_uploader("Upload audio", ["wav","mp3"])
+        threshold = st.slider("Detection threshold", 0.1, 0.9, 0.3)
+        aggregation = st.selectbox("Aggregation", ["mean","max","topk_mean"])
+        if st.button("▶ Predict", key="predict"):
+            run = True
+        else:
+            run = False
 
-    uploaded_file = st.sidebar.file_uploader(
-        "Upload audio file",
-        type=["wav", "mp3"]
-    )
+        st.markdown("<br><br><br>", unsafe_allow_html=True)
+        if st.button("↩️ Logout", key="logout"):
+            st.session_state.logged_in = False
+            st.session_state.page = "home"
+            st.rerun()
 
-    if st.sidebar.button("Sign Out"):
-        st.session_state.logged_in = False
-        st.session_state.user = None
-        st.rerun()
+    # Main content
+    st.title("🎵 InstruNet AI")
+    if audio is None:
+        st.info("Upload an audio file to begin.")
+        st.stop()
 
-    # ---------- MAIN ----------
-    st.title("🎧 Instrument Recognition Results")
+    st.audio(audio)
 
-    if not uploaded_file:
-        st.info("Upload an audio file to begin analysis.")
-        return
+    if run:
+        with st.spinner("Running inference..."):
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+                tmp.write(audio.read())
+                path = tmp.name
+            st.session_state.result = run_pipeline(
+                audio_path=path,
+                original_filename=audio.name,
+                threshold=threshold,
+                aggregation=aggregation
+            )
 
-    # ---------- SAVE FILE ----------
-    suffix = uploaded_file.name.split(".")[-1]
-    with tempfile.NamedTemporaryFile(delete=False, suffix=f".{suffix}") as tmp:
-        tmp.write(uploaded_file.getbuffer())
-        audio_path = tmp.name
+    result = st.session_state.get("result")
+    if result is None:
+        st.info("Click Predict to analyze.")
+        st.stop()
 
-    # ---------- AUDIO ----------
-    st.subheader("Audio Preview")
-    st.audio(uploaded_file)
+    st.markdown("### 🎯 Detected Instruments")
+    final = result["predictions"]["final_instruments"]
+    if not final:
+        st.warning("No dominant instruments detected.")
+    else:
+        for inst in final:
+            st.success(inst.upper())
 
-    # ---------- MEL-SPECTROGRAM ----------
-    st.subheader("Mel-Spectrogram")
+    with st.expander("Confidence scores"):
+        st.bar_chart(result["predictions"]["confidence_scores"])
 
-    y, sr = librosa.load(audio_path, sr=16000)
-    mel = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
-    mel_db = librosa.power_to_db(mel, ref=np.max) 
+    st.markdown("### 📤 Export")
+    st.download_button("Download JSON", export_json(result), "instrunet_result.json")
+    st.download_button("Download PDF", export_pdf(result), "instrunet_result.pdf")
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    img = librosa.display.specshow(
-        mel_db, sr=sr, x_axis="time", y_axis="mel", ax=ax
-    )
-    ax.set_title("Mel-Spectrogram")
-    fig.colorbar(img, ax=ax, format="%+2.0f dB")
-    st.pyplot(fig)
-    plt.close(fig)
-
-    # ---------- INFERENCE ----------
-    with st.spinner("Analyzing audio..."):
-        result = run_inference(audio_path)
-
-    aggregated = result["aggregated"]
-    segments = result["segments"]
-
-    # ---------- CONFIDENCE BAR CHART ----------
-    st.subheader("Analysis Results")
-
-    labels = list(aggregated.keys())
-    values = list(aggregated.values())
-
-    fig2, ax2 = plt.subplots(figsize=(8, 4))
-    ax2.barh(labels, values)
-    ax2.set_xlim(0, 1)
-    ax2.set_xlabel("Confidence")
-    ax2.set_title("Instrument Confidence")
-    st.pyplot(fig2)
-    plt.close(fig2)
-
-    # ---------- DETECTED INSTRUMENTS ----------
-    st.subheader("Detected Instruments")
-
-    cols = st.columns(3)
-    for i, (inst, prob) in enumerate(aggregated.items()):
-        cols[i % 3].checkbox(
-            f"{inst.upper()} ({prob:.2f})",
-            value=prob >= 0.3,
-            disabled=True
-        )
-
-    # ---------- INSTRUMENT TIMELINE ----------
-    st.subheader("Instrument Timeline")
-
-    times = [s["start_time_sec"] for s in segments]
-
-    fig3, ax3 = plt.subplots(figsize=(10, 3))
-    for inst in aggregated.keys():
-        probs = [s["probabilities"][inst] for s in segments]
-        ax3.plot(times, probs, label=inst)
-
-    ax3.set_xlabel("Time (seconds)")
-    ax3.set_ylabel("Probability")
-    ax3.legend(ncol=3, fontsize=8)
-    st.pyplot(fig3)
-    plt.close(fig3)
-
-    # ---------- EXPORT ----------
-    st.subheader("Export Report")
-
-    st.download_button(
-        "⬇ Download JSON Report",
-        data=json.dumps(result, indent=4),
-        file_name="instrument_results.json",
-        mime="application/json"
-    )
-
-# =================================================
-# APP CONTROLLER
-# =================================================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if not st.session_state.logged_in:
+# ---------------- PAGE ROUTER ----------------
+if st.session_state.page == "home":
+    home_page()
+elif st.session_state.page == "login":
     login_page()
-else:
-    dashboard()
+elif st.session_state.page == "app":
+    if st.session_state.logged_in:
+        main_app()
+    else:
+        st.session_state.page = "login"
+        st.rerun()
