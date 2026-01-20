@@ -1,0 +1,71 @@
+import librosa
+import librosa.display
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+BASE_PATH = "/kaggle/input/nsynth-wav"
+AUDIO_PATH = None
+
+for root, dirs, files in os.walk(BASE_PATH):
+    if root.lower().endswith("audio"):
+        AUDIO_PATH = root
+        break
+
+if AUDIO_PATH is None:
+    raise FileNotFoundError("NSynth audio folder not found")
+
+print(" Audio folder found:", AUDIO_PATH)
+
+OUTPUT_PATH = "spectrograms"
+os.makedirs(OUTPUT_PATH, exist_ok=True)
+
+INSTRUMENTS = ["piano", "guitar", "bass", "flute", "organ"]
+MAX_FILES = 2000
+count = {inst: 0 for inst in INSTRUMENTS}
+
+
+def create_mel_spectrogram(wav_path, save_path):
+    y, sr = librosa.load(wav_path, sr=22050, duration=3)
+
+    mel = librosa.feature.melspectrogram(
+        y=y,
+        sr=sr,
+        n_mels=64,
+        n_fft=2048,
+        hop_length=512
+    )
+
+    mel_db = librosa.power_to_db(mel, ref=np.max)
+
+    plt.figure(figsize=(2.5, 2.5))
+    librosa.display.specshow(mel_db)
+    plt.axis("off")
+    plt.savefig(save_path, bbox_inches="tight", pad_inches=0)
+    plt.close()
+
+for file in os.listdir(AUDIO_PATH):
+
+    if not file.endswith(".wav"):
+        continue
+
+    fname = file.lower()
+
+    for inst in INSTRUMENTS:
+        if inst in fname and count[inst] < MAX_FILES:
+
+            inst_dir = os.path.join(OUTPUT_PATH, inst)
+            os.makedirs(inst_dir, exist_ok=True)
+
+            input_file = os.path.join(AUDIO_PATH, file)
+            output_file = os.path.join(
+                inst_dir, file.replace(".wav", ".png")
+            )
+
+            create_mel_spectrogram(input_file, output_file)
+            count[inst] += 1
+            break
+
+print("\n Milestone-1 Completed")
+for k, v in count.items():
+    print(f"{k} : {v}")
