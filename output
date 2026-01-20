@@ -1,0 +1,17 @@
+100/100 ━━━━━━━━━━━━━━━━━━━━ 5s 47ms/step - accuracy: 0.7372 - loss: 1.2527
+Test Loss: 1.0144684314727783
+Test Accuracy: 0.7893750071525574
+100/100 ━━━━━━━━━━━━━━━━━━━━ 6s 57ms/step
+
+Classification Report
+
+              precision    recall  f1-score   support
+
+        bass       0.63      0.64      0.64       400
+       flute       0.92      0.97      0.95       400
+      guitar       0.70      0.81      0.75       400
+       organ       0.96      0.74      0.83       400
+
+    accuracy                           0.79      1600
+   macro avg       0.80      0.79      0.79      1600
+weighted avg       0.80      0.79      0.79      1600
