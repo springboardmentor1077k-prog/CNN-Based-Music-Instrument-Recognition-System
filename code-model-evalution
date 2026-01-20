@@ -1,0 +1,66 @@
+# =========================
+# WEEK 5 : MODEL EVALUATION
+# =========================
+
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+# Load trained model (from Week 3–4)
+model = load_model("instrument_cnn_model.h5")
+
+model.compile(
+    optimizer="adam",
+    loss="categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+# Load validation data
+datagen = ImageDataGenerator(rescale=1./255, validation_split=0.2)
+
+test_data = datagen.flow_from_directory(
+    "spectrograms",
+    target_size=(96,96),
+    batch_size=16,
+    class_mode="categorical",
+    subset="validation",
+    shuffle=False
+)
+
+# Evaluate model
+loss, acc = model.evaluate(test_data)
+print("Test Loss:", loss)
+print("Test Accuracy:", acc)
+
+# Predictions
+y_true = test_data.classes
+y_prob = model.predict(test_data)
+y_pred = np.argmax(y_prob, axis=1)
+
+# Classification Report
+print("\nClassification Report\n")
+print(classification_report(
+    y_true,
+    y_pred,
+    target_names=test_data.class_indices.keys()
+))
+
+# Confusion Matrix
+cm = confusion_matrix(y_true, y_pred)
+
+plt.figure(figsize=(7,6))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Greens",
+    xticklabels=test_data.class_indices.keys(),
+    yticklabels=test_data.class_indices.keys()
+)
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix – Week 5")
+plt.show()
