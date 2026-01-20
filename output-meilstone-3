@@ -1,0 +1,20 @@
+[ ]
+
+y_true = data.classes
+y_prob = model.predict(data)
+y_pred = np.argmax(y_prob, axis=1)
+
+# METRICS TABLE
+results = pd.DataFrame({
+    "Accuracy": [accuracy_score(y_true, y_pred)],
+    "Precision": [precision_score(y_true, y_pred, average="weighted")],
+    "Recall": [recall_score(y_true, y_pred, average="weighted")],
+
+WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+Found 8000 images belonging to 4 classes.
+500/500 ━━━━━━━━━━━━━━━━━━━━ 25s 50ms/step
+
+📊 FINAL EVALUATION TABLE
+
+           Accuracy  Precision  Recall  F1 Score     MSE      MAE  Log Loss
+CNN Model     0.935   0.936106   0.935  0.935385  0.2905  0.13225  0.264195
