@@ -1,0 +1,62 @@
+Found 6400 images belonging to 4 classes.
+Found 1600 images belonging to 4 classes.
+ Classes: {'bass': 0, 'flute': 1, 'guitar': 2, 'organ': 3}
+Model: "sequential_1"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Layer (type)                    ┃ Output Shape           ┃       Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ conv2d_3 (Conv2D)               │ (None, 94, 94, 16)     │           448 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ max_pooling2d_3 (MaxPooling2D)  │ (None, 47, 47, 16)     │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv2d_4 (Conv2D)               │ (None, 45, 45, 32)     │         4,640 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ max_pooling2d_4 (MaxPooling2D)  │ (None, 22, 22, 32)     │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv2d_5 (Conv2D)               │ (None, 20, 20, 64)     │        18,496 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ max_pooling2d_5 (MaxPooling2D)  │ (None, 10, 10, 64)     │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ flatten_1 (Flatten)             │ (None, 6400)           │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_2 (Dense)                 │ (None, 128)            │       819,328 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout_1 (Dropout)             │ (None, 128)            │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_3 (Dense)                 │ (None, 4)              │           516 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 843,428 (3.22 MB)
+ Trainable params: 843,428 (3.22 MB)
+ Non-trainable params: 0 (0.00 B)
+Epoch 1/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 66s 152ms/step - accuracy: 0.4977 - loss: 1.1136 - val_accuracy: 0.7119 - val_loss: 0.6469
+Epoch 2/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 61s 152ms/step - accuracy: 0.7254 - loss: 0.6905 - val_accuracy: 0.7556 - val_loss: 0.6226
+Epoch 3/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 60s 149ms/step - accuracy: 0.7706 - loss: 0.5517 - val_accuracy: 0.7638 - val_loss: 0.6486
+Epoch 4/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 60s 150ms/step - accuracy: 0.8124 - loss: 0.4750 - val_accuracy: 0.7788 - val_loss: 0.5411
+Epoch 5/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 65s 162ms/step - accuracy: 0.8287 - loss: 0.4149 - val_accuracy: 0.7819 - val_loss: 0.6173
+Epoch 6/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 59s 148ms/step - accuracy: 0.8428 - loss: 0.3870 - val_accuracy: 0.7763 - val_loss: 0.6696
+Epoch 7/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 58s 146ms/step - accuracy: 0.8710 - loss: 0.3170 - val_accuracy: 0.7900 - val_loss: 0.5805
+Epoch 8/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 59s 148ms/step - accuracy: 0.8825 - loss: 0.2963 - val_accuracy: 0.7975 - val_loss: 0.6665
+Epoch 9/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 60s 151ms/step - accuracy: 0.8934 - loss: 0.2656 - val_accuracy: 0.7700 - val_loss: 0.7495
+Epoch 10/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 58s 145ms/step - accuracy: 0.9024 - loss: 0.2478 - val_accuracy: 0.7856 - val_loss: 0.7540
+Epoch 11/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 60s 149ms/step - accuracy: 0.9126 - loss: 0.2173 - val_accuracy: 0.7650 - val_loss: 0.8678
+Epoch 12/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 59s 147ms/step - accuracy: 0.9294 - loss: 0.1883 - val_accuracy: 0.7475 - val_loss: 1.0109
+Epoch 13/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 81s 144ms/step - accuracy: 0.9199 - loss: 0.1959 - val_accuracy: 0.7375 - val_loss: 1.1290
+Epoch 14/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 59s 148ms/step - accuracy: 0.9328 - loss: 0.1556 - val_accuracy: 0.7569 - val_loss: 1.1385
+Epoch 15/15
+400/400 ━━━━━━━━━━━━━━━━━━━━ 58s 144ms/step - accuracy: 0.9462 - loss: 0.1451 - val_accuracy: 0.7894 - val_loss: 1.0145
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+✅ Model saved
