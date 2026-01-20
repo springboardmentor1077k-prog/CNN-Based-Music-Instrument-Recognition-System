@@ -1,0 +1,20 @@
+import matplotlib.pyplot as plt
+from PIL import Image
+import os
+import random
+
+BASE = "spectrograms"   # same folder used in training
+
+for cls in os.listdir(BASE):
+    cls_path = os.path.join(BASE, cls)
+    images = random.sample(os.listdir(cls_path), 5)
+
+    plt.figure(figsize=(10,2))
+    for i, img in enumerate(images):
+        plt.subplot(1,5,i+1)
+        plt.imshow(Image.open(os.path.join(cls_path, img)))
+        plt.title(cls)
+        plt.axis("off")
+
+    plt.suptitle(f"Mel Spectrograms - {cls}")
+    plt.show()
