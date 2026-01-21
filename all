@@ -1,0 +1,191 @@
+# ============================
+# FIX: Disable oneDNN (Windows CPU fix)
+# ============================
+import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+# ============================
+# Imports
+# ============================
+import numpy as np
+import librosa
+import tensorflow as tf
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, precision_score, recall_score, f1_score
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import (
+    Conv2D, MaxPooling2D, Flatten,
+    Dense, Dropout, BatchNormalization
+)
+from tensorflow.keras.optimizers import Adam
+
+# ============================
+# Global Parameters
+# ============================
+DATASET_PATH = "dataset"   # folder with instrument subfolders
+SAMPLE_RATE = 22050
+DURATION = 2.5
+N_MELS = 32
+MAX_FRAMES = 87
+THRESHOLD = 0.5
+EPOCHS = 30
+BATCH_SIZE = 16
+
+# ============================
+# Step 1: Load Dataset (Weak Multi-Label)
+# ============================
+instrument_list = sorted(os.listdir(DATASET_PATH))
+instrument_map = {inst: i for i, inst in enumerate(instrument_list)}
+
+print("Instruments:", instrument_map)
+
+X, y = [], []
+
+for inst in instrument_list:
+    folder = os.path.join(DATASET_PATH, inst)
+    for file in os.listdir(folder):
+        if not file.endswith(".wav"):
+            continue
+
+        path = os.path.join(folder, file)
+        audio, sr = librosa.load(path, sr=SAMPLE_RATE, duration=DURATION)
+
+        mel = librosa.feature.melspectrogram(
+            y=audio,
+            sr=sr,
+            n_mels=N_MELS
+        )
+        mel_db = librosa.power_to_db(mel)
+
+        if mel_db.shape[1] < MAX_FRAMES:
+            pad = MAX_FRAMES - mel_db.shape[1]
+            mel_db = np.pad(mel_db, ((0, 0), (0, pad)))
+        else:
+            mel_db = mel_db[:, :MAX_FRAMES]
+
+        X.append(mel_db)
+
+        label = np.zeros(len(instrument_list))
+        label[instrument_map[inst]] = 1
+        y.append(label)
+
+X = np.array(X)[..., np.newaxis]
+y = np.array(y)
+
+print("Dataset shape:", X.shape, y.shape)
+
+# ============================
+# Step 2: Train-Test Split
+# ============================
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# ============================
+# Step 3: Build CNN Model
+# ============================
+model = Sequential([
+    Conv2D(16, (3, 3), activation="relu", padding="same",
+           input_shape=(N_MELS, MAX_FRAMES, 1)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+    Dropout(0.25),
+
+    Conv2D(32, (3, 3), activation="relu", padding="same"),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+    Dropout(0.25),
+
+    Conv2D(64, (3, 3), activation="relu", padding="same"),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+    Dropout(0.25),
+
+    Flatten(),
+    Dense(128, activation="relu"),
+    BatchNormalization(),
+    Dropout(0.4),
+
+    Dense(len(instrument_list), activation="sigmoid")
+])
+
+model.compile(
+    optimizer=Adam(learning_rate=0.0005),
+    loss="binary_crossentropy",
+    metrics=["accuracy"]
+)
+
+model.summary()
+
+# ============================
+# Step 4: Train Model
+# ============================
+history = model.fit(
+    X_train, y_train,
+    validation_data=(X_test, y_test),
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE
+)
+
+# ============================
+# Step 5: Evaluation
+# ============================
+y_pred = model.predict(X_test)
+y_pred_bin = (y_pred >= THRESHOLD).astype(int)
+
+precision = precision_score(y_test, y_pred_bin, average="micro")
+recall = recall_score(y_test, y_pred_bin, average="micro")
+f1 = f1_score(y_test, y_pred_bin, average="micro")
+
+print("\nEvaluation Metrics:")
+print("Precision:", round(precision, 4))
+print("Recall:   ", round(recall, 4))
+print("F1 Score: ", round(f1, 4))
+
+print("\nClassification Report:")
+print(classification_report(
+    y_test,
+    y_pred_bin,
+    target_names=instrument_list
+))
+
+# ============================
+# Step 6: Save Model
+# ============================
+model.save("cnn_weak_multilabel_instrument_model.keras")
+print("✅ Model saved successfully")
+
+# ============================
+# Step 7: Predict on New Audio
+# ============================
+def predict_audio(file_path):
+    audio, sr = librosa.load(file_path, sr=SAMPLE_RATE, duration=DURATION)
+
+    mel = librosa.feature.melspectrogram(
+        y=audio,
+        sr=sr,
+        n_mels=N_MELS
+    )
+    mel_db = librosa.power_to_db(mel)
+
+    if mel_db.shape[1] < MAX_FRAMES:
+        mel_db = np.pad(mel_db, ((0, 0), (0, MAX_FRAMES - mel_db.shape[1])))
+    else:
+        mel_db = mel_db[:, :MAX_FRAMES]
+
+    mel_db = mel_db[np.newaxis, ..., np.newaxis]
+
+    probs = model.predict(mel_db)[0]
+
+    results = {}
+    for i, p in enumerate(probs):
+        if p >= THRESHOLD:
+            results[instrument_list[i]] = round(float(p), 3)
+
+    return results
+
+# 🔴 CHANGE THIS PATH
+print("\nPrediction on test audio:")
+print(predict_audio("test.wav"))

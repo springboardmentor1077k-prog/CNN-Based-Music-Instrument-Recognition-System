@@ -1,0 +1,75 @@
+import os
+import numpy as np
+import librosa
+from tensorflow.keras.models import load_model
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+
+# ==========================
+# Config
+# ==========================
+MODEL_PATH = "cnn_music_instrument_model.h5"  # your trained model
+DATASET_PATH = "C:/Users/manoj/Desktop/CNN-Based-Music-Instrument-Recognition-System/datasets"  # folder containing instrument subfolders
+DURATION = 2  # seconds
+N_MELS = 32
+
+# ==========================
+# Step 1: Load model
+# ==========================
+model = load_model(MODEL_PATH)
+print("✅ Model loaded successfully")
+
+# ==========================
+# Step 2: Prepare label map
+# ==========================
+label_map = {}
+label_index = 0
+for instrument in os.listdir(DATASET_PATH):
+    instrument_path = os.path.join(DATASET_PATH, instrument)
+    if os.path.isdir(instrument_path):
+        label_map[label_index] = instrument
+        label_index += 1
+
+print(f"📂 Labels found: {label_map}")
+
+# ==========================
+# Step 3: Prediction function
+# ==========================
+def predict_instrument(file_path):
+    # Load audio (pad if shorter than DURATION)
+    audio, sr = librosa.load(file_path, duration=DURATION)
+    
+    # If audio is shorter than required, pad with zeros
+    if len(audio) < DURATION * sr:
+        pad_len = DURATION * sr - len(audio)
+        audio = np.pad(audio, (0, pad_len), mode='constant')
+
+    # Mel spectrogram
+    mel_spec = librosa.feature.melspectrogram(y=audio, sr=sr, n_mels=N_MELS)
+    mel_spec_db = librosa.power_to_db(mel_spec)
+
+    # Add channel and batch dimension
+    mel_spec_db = mel_spec_db[..., np.newaxis]
+    mel_spec_db = np.expand_dims(mel_spec_db, axis=0)
+
+    # Predict
+    pred_probs = model.predict(mel_spec_db)
+    pred_class = np.argmax(pred_probs)
+    
+    instrument_name = label_map[pred_class]
+    confidence = pred_probs[0][pred_class]
+    
+    return instrument_name, confidence
+
+# ==========================
+# Step 4: Select audio file
+# ==========================
+Tk().withdraw()  # Hide Tkinter root window
+print("🎧 Select a .wav file for prediction")
+file_path = askopenfilename(filetypes=[("WAV files", "*.wav")])
+
+if file_path and os.path.exists(file_path):
+    instrument, conf = predict_instrument(file_path)
+    print(f"🎵 Predicted Instrument: {instrument} (Confidence: {conf*100:.2f}%)")
+else:
+    print("❌ No file selected or file does not exist.")
