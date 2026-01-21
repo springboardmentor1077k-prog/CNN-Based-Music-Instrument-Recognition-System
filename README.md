@@ -127,13 +127,6 @@ Refer to `requirements.txt` for the complete dependency list.
 
 ---
 
-## 👩‍💻 Author
-
-**Nandhana M J**
-Internship / Academic Project
-
----
-
 ## 📄 License
 
 This project currently does not include a license. A license may be added later if required.
