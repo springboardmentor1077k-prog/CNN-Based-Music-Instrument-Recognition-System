@@ -1,67 +1,79 @@
 # InstruNet AI: CNN-Based Music Instrument Recognition
 
-**InstruNet AI** is a deep learning project designed to automatically identify musical instruments in audio tracks using Convolutional Neural Networks (CNNs).
+**InstruNet AI** is a deep learning system designed to automatically identify musical instruments in audio tracks using Convolutional Neural Networks (CNNs). It processes audio into Mel-spectrograms and analyzes them to provide real-time instrument detection.
 
-## Project Status
+## 🚀 Live Demo
+Experience the model in action:
+- **Main Space:** [huggingface.co/spaces/jagathkiran/instrunet-ai](https://huggingface.co/spaces/jagathkiran/instrunet-ai)
+- **Direct Interface:** [jagathkiran-instrunet-ai.hf.space](https://jagathkiran-instrunet-ai.hf.space)
 
-- **Phase:** Active Development
-- **Current Focus:** Model Evaluation & Optimization (Task 10)
-- **Dataset:** [IRMAS (Instrument Recognition in Musical Audio Signals)](https://www.upf.edu/web/mtg/irmas)
+---
 
-## Recent Progress
-*   **Task 10 (In Progress):** Fixed critical Data Leakage; refactored pipeline to "Split-First, Augment-Second". Integrated `ReduceLROnPlateau` for training stability.
-*   **Task 9 (Completed):** Performed initial robust training on 5x augmented dataset. Identified 64% real accuracy vs 89% leaked accuracy.
-*   **Task 8 (Completed):** Initial CNN training and evaluation.
-*   **Task 7 (Completed):** Designed and implemented the CNN architecture (`ModelTrainer`).
+## ✨ Key Features
+- **Real-Time Analysis:** Upload WAV/MP3 files for instant instrument identification.
+- **Advanced Slicing:** Automatically divides long audio into 3-second windows for detailed analysis.
+- **Visual Feedback:** Side-by-side Waveform and Mel-spectrogram visualizations.
+- **Customizable Inference:** Adjust detection thresholds, model sensitivity, and aggregation strategies (Mean/Max).
+- **Guest Access:** Try the app instantly with a 10-upload guest limit.
+- **Professional Reports:** Export results as JSON or PDF (requires account).
 
-## Structure
+---
 
-- `src/`: Source code for audio processing, modeling, and evaluation.
-- `datasets/`: Raw and processed IRMAS data.
-- `docs/`: Technical reports for each development task.
-- `outputs/`: Trained models, metrics, and visualization plots.
+## 🛠️ Technology Stack
+- **Deep Learning:** TensorFlow / Keras (CNN)
+- **Audio Processing:** Librosa, Soundfile
+- **Dashboard:** Streamlit
+- **Deployment:** Docker / Hugging Face Spaces
+- **Reporting:** FPDF, Pandas
 
-## Setup & Usage
+---
 
-1. **Environment:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+## 💻 Local Setup & Usage
 
-2. **Run Dataset Preprocessing (Updated):**
-    Processes the IRMAS dataset using a **Split-First** strategy (80/20) to prevent data leakage. Augmentation is applied only to the training set.
+### 1. Run via Docker (Recommended)
+The easiest way to run the dashboard locally with all dependencies pre-configured:
 
-    ```bash
-    python3 src/preprocessing.py
-    ```
+```bash
+# Build the production image
+docker build -t instrunet-web -f Dockerfile.web .
 
-    - **Train Data:** `datasets/IRMAS-ProcessedTrainingData/train/spectrograms/`
-    - **Val Data:** `datasets/IRMAS-ProcessedTrainingData/validation/spectrograms/`
+# Run the container
+docker run -p 8501:8501 instrunet-web
+```
+Open `http://localhost:8501` in your browser.
 
-3. **Run Model Training:**
-    Trains the CNN using the processed train/val splits.
+### 2. Manual Installation
+```bash
+# Install dependencies
+pip install -r requirements-prod.txt
 
-    ```bash
-    python3 src/training.py
-    ```
+# Run the dashboard
+streamlit run src/frontend.py
+```
 
-4. **HPC Execution (Docker/Singularity):**
-    The project is optimized for High-Performance Computing environments.
-    
-    - **Instructions:** See `docs/hpc_instructions.md` for full guide.
-    - **Features:** Headless plotting, CLI arguments, and pre-built Dockerfile.
-    
-    ```bash
-    # Example Singularity Command
-    singularity exec --nv --bind .:/app instrunet_ai.sif python src/training.py --epochs 50
-    ```
+---
 
-5. **Run Instrument Comparison Visualization:**
-    To generate a visual comparison of STFT and Mel-spectrograms for different instruments:
+## 🏋️ Training & Preprocessing
+If you wish to retrain the model or process the dataset:
 
-    ```bash
-    python3 src/instrument_comparison.py
-    ```
+1. **Preprocessing:**
+   ```bash
+   python3 src/preprocessing.py
+   ```
+2. **Training:**
+   ```bash
+   python3 src/training.py
+   ```
 
-    - Comparison plot: `outputs/instrument_comparison.png`
+---
 
+## 📁 Project Structure
+- `src/`: Core logic for audio processing, modeling, and the Streamlit frontend.
+- `outputs/`: Contains the trained `.keras` model and benchmark metrics (Confusion Matrix, ROC Curves).
+- `docs/`: Technical reports and implementation details.
+- `Dockerfile.web`: Optimized Docker configuration for web deployment.
+
+---
+
+## ⚖️ License
+This project is for educational and portfolio purposes. Data used is from the IRMAS and NSynth datasets.
