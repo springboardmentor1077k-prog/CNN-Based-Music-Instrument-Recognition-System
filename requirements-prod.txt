@@ -1,0 +1,13 @@
+# Production requirements (no Jupyter/dev tools)
+librosa
+matplotlib
+numpy
+scipy
+soundfile
+tqdm
+tensorflow<2.16
+pandas
+seaborn
+scikit-learn
+fpdf
+streamlit
