@@ -13,18 +13,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Python dependencies
 COPY requirements-prod.txt .
-RUN pip install --no-cache-dir -r requirements-prod.txt
+RUN pip install --no-cache-dir "tensorflow<2.16" && \
+    pip install --no-cache-dir -r requirements-prod.txt
 
-# Copy application files (respecting .dockerignore)
-# We copy explicitly to be clear about what goes into the image
+# Copy application files
 COPY src/ ./src/
 COPY outputs/ ./outputs/
 COPY .streamlit/ ./.streamlit/
-# Copy users.json if it exists, otherwise create an empty one
-COPY users.json* ./ 
+COPY users.json* .
 
-# Expose the default Streamlit port
-EXPOSE 8501
+# Hugging Face Spaces uses port 7860
+EXPOSE 7860
 
-# Run the application
-CMD ["streamlit", "run", "src/frontend.py", "--server.address=0.0.0.0", "--server.port=8501"]
+# Run the application on port 7860
+CMD ["streamlit", "run", "src/frontend.py", "--server.address=0.0.0.0", "--server.port=7860"]
