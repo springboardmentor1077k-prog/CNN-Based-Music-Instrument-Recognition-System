@@ -155,21 +155,54 @@ def generate_pdf_report(result_obj, plots=None):
 
 # --- Mock Inference ---
 
-def run_mock_inference(filename, y, sr):
-    # This simulates the "Single Source of Truth" result object
-    # In a real app, this would call model.predict()
-    threshold = 0.4
-    predictions = []
+def run_mock_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mean"):
+    # This simulates the "Single Source of Truth" result object.
+    # The REAL model is Single-Label (Softmax), so probabilities sum to 1.0.
     
-    for code in CLASS_NAMES:
-        conf = np.random.random() * 0.9 # Random confidence
-        # Mocking specific detection for demo purposes
-        if code in ['pia', 'gel']: conf = 0.8 + (np.random.random() * 0.1)
+    predictions = []
+    num_classes = len(CLASS_NAMES)
+    
+    # 1. Simulate Raw Logits (mostly low noise)
+    raw_probs = np.random.dirichlet(np.ones(num_classes), size=1)[0]
+    
+    # 2. Pick a "Winner" (Dominant Instrument)
+    # Try to guess from filename for a better demo experience, else random
+    winner_idx = np.random.randint(0, num_classes)
+    for i, code in enumerate(CLASS_NAMES):
+        inst_name = INSTRUMENT_MAP.get(code, code)
+        # Simple heuristic check
+        if code in filename.lower() or inst_name.lower() in filename.lower():
+            winner_idx = i
+            break
+            
+    # Boost the winner to simulate a trained model
+    # A good model is 80-99% confident
+    confidence_boost = 0.8 + (np.random.random() * 0.15) 
+    
+    # Re-normalize: Winner gets boost, others get crushed
+    raw_probs = raw_probs * (1 - confidence_boost) # Scale down noise
+    raw_probs[winner_idx] = confidence_boost
+    
+    # 3. Apply Strategy & Sensitivity
+    for i, code in enumerate(CLASS_NAMES):
+        prob = raw_probs[i]
+        
+        # Strategy Effect (Simulation)
+        if strategy == "Max":
+            # Max pooling tends to be more confident/aggressive
+            prob = prob ** 0.8
+        elif strategy == "Mean":
+            # Mean pooling flattens peaks slightly
+            prob = prob
+            
+        # Sensitivity Effect
+        final_conf = prob * sensitivity
+        final_conf = min(max(final_conf, 0.0), 1.0) # Clamp
         
         predictions.append({
             "instrument": INSTRUMENT_MAP.get(code, code),
-            "confidence": float(conf),
-            "detected": bool(conf >= threshold)
+            "confidence": float(final_conf),
+            "detected": bool(final_conf >= threshold)
         })
     
     # Sort by confidence
@@ -183,7 +216,9 @@ def run_mock_inference(filename, y, sr):
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         },
         "predictions": predictions,
-        "threshold": threshold
+        "threshold": threshold,
+        "sensitivity": sensitivity,
+        "strategy": strategy
     }
     return result
 
@@ -193,13 +228,14 @@ def login_page():
     st.title(APP_TITLE)
     st.header("Login")
     
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("Login"):
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        
+        # Form submit button
+        submitted = st.form_submit_button("Login")
+        
+        if submitted:
             success, msg = login(username, password)
             if success:
                 st.session_state['logged_in'] = True
@@ -209,23 +245,22 @@ def login_page():
             else:
                 st.error(msg)
                 
-    with col2:
-        if st.button("Go to Signup"):
-            st.session_state['page'] = 'signup'
-            st.rerun()
+    if st.button("Go to Signup"):
+        st.session_state['page'] = 'signup'
+        st.rerun()
 
 def signup_page():
     st.title(APP_TITLE)
     st.header("Sign Up")
     
-    username = st.text_input("Choose a Username")
-    password = st.text_input("Choose a Password", type="password")
-    confirm_password = st.text_input("Confirm Password", type="password")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("Sign Up"):
+    with st.form("signup_form"):
+        username = st.text_input("Choose a Username")
+        password = st.text_input("Choose a Password", type="password")
+        confirm_password = st.text_input("Confirm Password", type="password")
+        
+        submitted = st.form_submit_button("Sign Up")
+        
+        if submitted:
             if password != confirm_password:
                 st.error("Passwords do not match.")
             elif not username or not password:
@@ -239,13 +274,40 @@ def signup_page():
                 else:
                     st.error(msg)
     
-    with col2:
-        if st.button("Back to Login"):
-            st.session_state['page'] = 'login'
-            st.rerun()
+    if st.button("Back to Login"):
+        st.session_state['page'] = 'login'
+        st.rerun()
 
 def dashboard_page():
+    # Sidebar: User & Advanced Settings
     st.sidebar.title(f"👤 {st.session_state['username']}")
+    
+    st.sidebar.divider()
+    st.sidebar.header("⚙️ Advanced Settings")
+    
+    # 1. Detection Threshold
+    threshold = st.sidebar.slider(
+        "Detection Threshold", 
+        min_value=0.0, max_value=1.0, value=0.4, step=0.05,
+        help="Minimum confidence score required for an instrument to be marked as 'Detected'."
+    )
+    
+    # 2. Model Sensitivity
+    sensitivity = st.sidebar.slider(
+        "Model Sensitivity", 
+        min_value=0.5, max_value=1.5, value=1.0, step=0.1,
+        help="Boost or suppress all confidence scores. High sensitivity helps find faint instruments but increases noise."
+    )
+    
+    # 3. Aggregation Strategy
+    strategy = st.sidebar.selectbox(
+        "Aggregation Strategy",
+        options=["Mean", "Max"],
+        index=0,
+        help="How to combine scores from different 3-second windows: Mean (Average) or Max (Peak Confidence)."
+    )
+    
+    st.sidebar.divider()
     if st.sidebar.button("Logout"):
         st.session_state['logged_in'] = False
         st.session_state['username'] = None
@@ -268,36 +330,48 @@ def dashboard_page():
 
         y, sr = st.session_state['audio_data']
         
-        col_audio, col_btn = st.columns([3, 1])
+        # Use vertical_alignment to align the button with the audio player
+        col_audio, col_btn = st.columns([3, 1], vertical_alignment="bottom")
         with col_audio:
             st.audio(uploaded_file)
+        
+        run_clicked = False
         with col_btn:
-            st.write(" ") # Padding
-            if st.button("🚀 Run Prediction", use_container_width=True):
-                with st.spinner("Analyzing instruments..."):
-                    # Step 1: Create Result Object (Single Source of Truth)
-                    res = run_mock_inference(uploaded_file.name, y, sr)
-                    st.session_state['prediction_result'] = res
-                    st.success("Analysis Complete!")
+            if st.button("🚀 Run Prediction", width="stretch"):
+                run_clicked = True
+        
+        # Handle prediction logic outside the columns to avoid layout shifts
+        if run_clicked:
+            with st.spinner("Analyzing instruments..."):
+                # Step 1: Create Result Object (Single Source of Truth)
+                res = run_mock_inference(
+                    uploaded_file.name, y, sr, 
+                    threshold=threshold, 
+                    sensitivity=sensitivity, 
+                    strategy=strategy
+                )
+                st.session_state['prediction_result'] = res
+                st.success(f"Analysis Complete (Strategy: {strategy})!")
 
         # 2. Audio Visualization Section
         st.divider()
-        st.header("2. Audio Visualization")
-        tab1, tab2 = st.tabs(["Waveform", "Spectrogram"])
         
-        with tab1:
-            fig_wav = plot_waveform(y, sr)
-            st.pyplot(fig_wav)
-            # Store plot for PDF
-            st.session_state['plot_wav_path'] = os.path.join(tempfile.gettempdir(), "temp_wav.png")
-            fig_wav.savefig(st.session_state['plot_wav_path'])
+        with st.expander("2. Audio Visualization", expanded=True):
+            tab1, tab2 = st.tabs(["Waveform", "Spectrogram"])
+            
+            with tab1:
+                fig_wav = plot_waveform(y, sr)
+                st.pyplot(fig_wav)
+                # Store plot for PDF
+                st.session_state['plot_wav_path'] = os.path.join(tempfile.gettempdir(), "temp_wav.png")
+                fig_wav.savefig(st.session_state['plot_wav_path'])
 
-        with tab2:
-            fig_spec = plot_mel_spectrogram(y, sr)
-            st.pyplot(fig_spec)
-            # Store plot for PDF
-            st.session_state['plot_spec_path'] = os.path.join(tempfile.gettempdir(), "temp_spec.png")
-            fig_spec.savefig(st.session_state['plot_spec_path'])
+            with tab2:
+                fig_spec = plot_mel_spectrogram(y, sr)
+                st.pyplot(fig_spec)
+                # Store plot for PDF
+                st.session_state['plot_spec_path'] = os.path.join(tempfile.gettempdir(), "temp_spec.png")
+                fig_spec.savefig(st.session_state['plot_spec_path'])
 
         # 3. Prediction Results Section
         if st.session_state.get('prediction_result'):
@@ -356,7 +430,9 @@ def dashboard_page():
         st.write("These metrics represent the overall performance of the model on the test dataset.")
         
         # Paths to static assets
-        outputs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "outputs")
+        # Go up two levels: src/frontend.py -> src -> root
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        outputs_dir = os.path.join(project_root, "outputs")
         conf_matrix_path = os.path.join(outputs_dir, "normalized_confusion_matrix.png")
         roc_path = os.path.join(outputs_dir, "roc_curves.png")
         report_path = os.path.join(outputs_dir, "classification_report.csv")
@@ -367,7 +443,7 @@ def dashboard_page():
             try:
                 import pandas as pd
                 df_metrics = pd.read_csv(report_path)
-                st.dataframe(df_metrics, use_container_width=True)
+                st.dataframe(df_metrics, width="stretch")
             except Exception as e:
                 st.error(f"Could not load metrics table: {e}")
         
@@ -377,14 +453,14 @@ def dashboard_page():
         with col_m1:
             st.subheader("Confusion Matrix")
             if os.path.exists(conf_matrix_path):
-                st.image(conf_matrix_path, caption="Normalized Confusion Matrix", use_column_width=True)
+                st.image(conf_matrix_path, caption="Normalized Confusion Matrix", width="stretch")
             else:
                 st.warning("Confusion Matrix image not found.")
 
         with col_m2:
             st.subheader("ROC Curves")
             if os.path.exists(roc_path):
-                st.image(roc_path, caption="Receiver Operating Characteristic (ROC)", use_column_width=True)
+                st.image(roc_path, caption="Receiver Operating Characteristic (ROC)", width="stretch")
             else:
                 st.warning("ROC Curves image not found.")
 

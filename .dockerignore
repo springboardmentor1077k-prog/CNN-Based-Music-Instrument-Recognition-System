@@ -1,0 +1,22 @@
+# Core Exclusions
+datasets/
+.git/
+.gitignore
+__pycache__/
+*.pyc
+.ipynb_checkpoints
+.DS_Store
+
+# Documentation & Logs (Not needed for the app)
+docs/
+logs/
+
+# Root files not needed in container
+Dockerfile
+Dockerfile.web
+activate
+README.md
+
+# Filter outputs: Keep model (.keras), stats (.csv), and plots (.png)
+# Exclude training logs from the image
+outputs/*.log
