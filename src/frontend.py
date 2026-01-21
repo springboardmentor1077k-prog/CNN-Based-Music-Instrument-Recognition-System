@@ -419,6 +419,13 @@ def login_page():
                     st.error(msg)
         
         st.markdown("---")
+        # Guest Access
+        if st.button("👀 Continue as Guest (Demo)", use_container_width=True):
+            st.session_state['logged_in'] = True
+            st.session_state['username'] = "Guest"
+            st.rerun()
+
+        st.write("")
         if st.button("Create New Account", use_container_width=True):
             st.session_state['page'] = 'signup'
             st.rerun()
@@ -502,12 +509,23 @@ def dashboard_page():
                 if st.button("🚀 Identify Instruments", width="stretch"):
                     run_clicked = True
             
+            # Guest Usage Logic
+            is_guest = st.session_state.get('username') == 'Guest'
+            if is_guest:
+                usage = st.session_state.get('guest_usage', 0)
+                st.caption(f"Guest Usage: {usage}/10")
+            
             if run_clicked:
-                with st.spinner("Processing audio & extracting features..."):
-                    res = run_inference(uploaded_file.name, y, sr, threshold, sensitivity, strategy)
-                    if res:
-                        st.session_state['prediction_result'] = res
-                        st.success("Analysis Complete!")
+                if is_guest and st.session_state.get('guest_usage', 0) >= 10:
+                    st.error("🚫 Guest limit reached (10/10). Please create an account to continue.")
+                else:
+                    with st.spinner("Processing audio & extracting features..."):
+                        res = run_inference(uploaded_file.name, y, sr, threshold, sensitivity, strategy)
+                        if res:
+                            st.session_state['prediction_result'] = res
+                            st.success("Analysis Complete!")
+                            if is_guest:
+                                st.session_state['guest_usage'] = st.session_state.get('guest_usage', 0) + 1
 
     # Visualization (Expander)
     if uploaded_file is not None:
@@ -559,6 +577,8 @@ def dashboard_page():
         
         with col_res2:
             st.write("#### Actions")
+            
+            # Everyone can download reports
             json_data = generate_json_report(res)
             st.download_button(
                 label="📄 Download JSON Report",
@@ -582,6 +602,16 @@ def dashboard_page():
                 mime="application/pdf",
                 use_container_width=True
             )
+
+            st.divider()
+            
+            # Saving to Database (Restricted to Registered Users)
+            if st.session_state.get('username') == 'Guest':
+                st.button("💾 Save to History", help="Log in to save results to your account history.", disabled=True, use_container_width=True)
+                st.caption("🔒 Log in to save results to your cloud profile.")
+            else:
+                if st.button("💾 Save to History", help="Save this analysis to your account history.", use_container_width=True):
+                    st.info("Feature coming soon! Database integration (Supabase/PostgreSQL) is in the project roadmap.")
 
     # Power User Section (Footer)
     st.write("")
