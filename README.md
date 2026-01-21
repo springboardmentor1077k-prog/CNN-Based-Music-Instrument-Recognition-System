@@ -59,7 +59,7 @@ cnn/
 │   └── *.json
 │
 ├── model/                      # Trained CNN model files
-│   └── multilabel_cnn_improved.h5
+│   └── multilabel_cnn_improved.keras
 │
 ├── *.ipynb                     # Jupyter notebooks (preprocessing, training, evaluation)
 │
@@ -71,6 +71,17 @@ cnn/
 **Note:** All Jupyter notebooks are intentionally placed directly inside the `cnn/` directory (not grouped into subfolders) to simplify experimentation, comparison, and academic review.
 
 ---
+📦 Model Files Note
+
+The trained model file (.keras) is intentionally excluded using .gitignore due to file size and deployment constraints.
+
+The repository contains the model architecture, training notebooks, and inference pipeline
+
+The actual trained weights are loaded locally or provided separately during deployment
+
+This approach keeps the repository lightweight and GitHub-friendly
+
+If required, the model file can be shared privately or added later using Git LFS or cloud storage.
 
 ## 🌐 Deployment
 
