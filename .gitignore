@@ -12,7 +12,7 @@ datasets/
 logs/
 scripts/
 notebook/
-Makefile
+/Makefile
 outputs/*.txt
 *.zip
 
