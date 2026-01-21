@@ -15,3 +15,13 @@ notebook/
 Makefile
 outputs/*.txt
 *.zip
+
+# Latex & presentation
+*.pdf
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.pptx
