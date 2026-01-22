@@ -1,0 +1,260 @@
+import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+import librosa
+import tempfile
+import pickle
+import soundfile as sf
+import json
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from datetime import datetime
+import os
+
+# ===============================
+# PAGE CONFIG
+# ===============================
+st.set_page_config(page_title="InstruNet AI", layout="wide")
+
+# ===============================
+# USER DATABASE
+# ===============================
+USER_DB = "users.json"
+
+def load_users():
+    if not os.path.exists(USER_DB):
+        with open(USER_DB, "w") as f:
+            json.dump({}, f)
+    with open(USER_DB, "r") as f:
+        return json.load(f)
+
+def save_users(users):
+    with open(USER_DB, "w") as f:
+        json.dump(users, f, indent=4)
+
+# ===============================
+# SESSION STATE
+# ===============================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "page" not in st.session_state:
+    st.session_state.page = "login"
+
+# ===============================
+# STYLE
+# ===============================
+st.markdown("""
+<style>
+body {background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);}
+.login-box {
+    background:#020617;padding:40px;border-radius:18px;
+    width:420px;margin:auto;margin-top:120px;
+}
+.title {text-align:center;font-size:30px;font-weight:bold;color:#38bdf8;}
+.card {background:#111827;border-radius:18px;padding:20px;}
+</style>
+""", unsafe_allow_html=True)
+
+# ===============================
+# LOGIN PAGE (USERNAME + PASSWORD ONLY)
+# ===============================
+def login_page():
+    users = load_users()
+    st.markdown('<div class="login-box">', unsafe_allow_html=True)
+    st.markdown('<div class="title">🎵 InstruNet AI</div>', unsafe_allow_html=True)
+
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("LOGIN"):
+        if username in users and users[username]["password"] == password:
+            st.session_state.logged_in = True
+            st.success("Login successful")
+            st.rerun()
+        else:
+            st.error("Invalid username or password")
+
+    if st.button("Create New Account"):
+        st.session_state.page = "register"
+        st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# ===============================
+# REGISTER PAGE
+# ===============================
+def register_page():
+    users = load_users()
+    st.markdown('<div class="login-box">', unsafe_allow_html=True)
+    st.markdown('<div class="title">📝 Register</div>', unsafe_allow_html=True)
+
+    username = st.text_input("Username")
+    name = st.text_input("Full Name")
+    password = st.text_input("Password", type="password")
+    confirm = st.text_input("Confirm Password", type="password")
+
+    if st.button("REGISTER"):
+        if not all([username, name, password]):
+            st.error("All fields required")
+        elif password != confirm:
+            st.error("Passwords do not match")
+        elif username in users:
+            st.error("Username already exists")
+        else:
+            users[username] = {
+                "name": name,
+                "password": password
+            }
+            save_users(users)
+            st.success("Registration successful")
+            st.session_state.page = "login"
+            st.rerun()
+
+    if st.button("Back to Login"):
+        st.session_state.page = "login"
+        st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# ===============================
+# AUTH ROUTING
+# ===============================
+if not st.session_state.logged_in:
+    if st.session_state.page == "login":
+        login_page()
+    else:
+        register_page()
+    st.stop()
+
+# ===============================
+# LOAD MODEL
+# ===============================
+with open("model.pkl", "rb") as f:
+    model = pickle.load(f)
+
+# ===============================
+# AUDIO PROCESSING
+# ===============================
+def extract_features(path):
+    try:
+        try:
+            y, sr = sf.read(path)
+            if y.ndim == 2:
+                y = np.mean(y, axis=1)
+        except:
+            y, sr = librosa.load(path, sr=None, mono=True)
+
+        if sr != 16000:
+            y = librosa.resample(y, orig_sr=sr, target_sr=16000)
+            sr = 16000
+
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
+        mfcc = np.resize(mfcc, (96, 96))
+        mfcc = (mfcc - mfcc.min()) / (mfcc.max() - mfcc.min() + 1e-6)
+        mfcc = np.stack([mfcc]*3, axis=-1)
+
+        return mfcc[np.newaxis, ...], y
+    except Exception as e:
+        st.error(f"Audio error: {e}")
+        return None, None
+
+# ===============================
+# REPORT EXPORT
+# ===============================
+def export_json(file, instruments, scores):
+    data = {
+        "generated": str(datetime.now()),
+        "results": [
+            {"instrument": i, "confidence": float(s)}
+            for i, s in zip(instruments, scores)
+        ]
+    }
+    with open(file, "w") as f:
+        json.dump(data, f, indent=4)
+
+def export_pdf(file, instruments, scores):
+    c = canvas.Canvas(file, pagesize=A4)
+    y = 800
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(50, y, "Instrument Recognition Report")
+    y -= 40
+    c.setFont("Helvetica", 12)
+    for i, s in zip(instruments, scores):
+        c.drawString(50, y, f"{i}: {s:.2f}")
+        y -= 20
+    c.save()
+
+# ===============================
+# DASHBOARD
+# ===============================
+st.markdown('<div class="title">🎧 InstruNet AI Dashboard</div>', unsafe_allow_html=True)
+
+if st.button("🚪 Logout"):
+    st.session_state.logged_in = False
+    st.session_state.page = "login"
+    st.rerun()
+
+left, center, right = st.columns([1.3, 2.8, 1.4])
+
+# LEFT
+with left:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    audio_file = st.file_uploader("Upload Audio", type=["wav", "mp3"])
+    if audio_file:
+        st.audio(audio_file)
+    analyze = st.button("🔍 ANALYZE")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# CENTER
+with center:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    if audio_file and analyze:
+        suffix = os.path.splitext(audio_file.name)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(audio_file.getbuffer())
+            path = tmp.name
+
+        features, audio = extract_features(path)
+        if features is None:
+            st.stop()
+
+        scores = model.predict(features)[0]
+        instruments = ["Piano","Guitar","Flute","Drums","Bass","Violin"][:len(scores)]
+
+        export_json("instrument_report.json", instruments, scores)
+        export_pdf("instrument_report.pdf", instruments, scores)
+
+        st.success("Analysis completed")
+
+        st.download_button("⬇ Download JSON", open("instrument_report.json","rb"))
+        st.download_button("⬇ Download PDF", open("instrument_report.pdf","rb"))
+
+        fig, ax = plt.subplots(figsize=(9,3))
+        ax.plot(audio)
+        st.pyplot(fig)
+        plt.close(fig)
+
+        fig2, ax2 = plt.subplots(figsize=(9,3))
+        ax2.barh(instruments, scores)
+        ax2.set_xlim(0,1)
+        st.pyplot(fig2)
+        plt.close(fig2)
+
+    else:
+        st.info("Upload audio and click ANALYZE")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# RIGHT
+with right:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("Detected Instruments")
+
+    if audio_file and analyze:
+        for i, s in zip(instruments, scores):
+            st.checkbox(f"{i} ({s:.2f})", s > 0.5, disabled=True)
+    else:
+        st.info("Waiting for analysis")
+
+    st.markdown('</div>', unsafe_allow_html=True)
