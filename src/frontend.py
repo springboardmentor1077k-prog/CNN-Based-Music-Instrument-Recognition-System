@@ -219,11 +219,15 @@ def generate_pdf_report(result_obj, plots=None):
 
     # Add plots if provided (as file paths)
     if plots:
-        pdf.add_page()
-        pdf.chapter_title("5. Visualizations")
-        for plot_path in plots:
+        for i, plot_path in enumerate(plots):
+            # Add a new page for every 2 plots or for the first plot
+            if i % 2 == 0:
+                pdf.add_page()
+                pdf.chapter_title(f"Visualizations (Part {i // 2 + 1})")
+            
             pdf.image(plot_path, x=10, w=180)
-            pdf.ln(10)
+            pdf.ln(5)
+
 
     return pdf.output(dest="S").encode("latin-1")
 
@@ -531,13 +535,29 @@ def dashboard_page():
     # Input Container
     with st.container():
         st.subheader("📁 Analysis Input")
-        uploaded_file = st.file_uploader("Upload Audio (WAV/MP3)", type=['wav', 'mp3'], label_visibility="collapsed")
         
+        tab_upload, tab_record = st.tabs(["📤 Upload File", "🎙️ Record Audio"])
+        
+        uploaded_file = None
+        with tab_upload:
+            file_upload = st.file_uploader("Upload Audio (WAV/MP3)", type=['wav', 'mp3'], label_visibility="collapsed")
+            if file_upload:
+                uploaded_file = file_upload
+                
+        with tab_record:
+            # Streamlit 1.34+ audio_input
+            recorded_audio = st.audio_input("Record your instrument performance", label_visibility="collapsed")
+            if recorded_audio:
+                uploaded_file = recorded_audio
+
         if uploaded_file is not None:
-            if 'audio_data' not in st.session_state or st.session_state.get('last_file') != uploaded_file.name:
+            # Generate a consistent name for recorded files
+            fname = getattr(uploaded_file, 'name', 'recorded_audio.wav')
+            
+            if 'audio_data' not in st.session_state or st.session_state.get('last_file') != fname:
                 y, sr = librosa.load(uploaded_file, sr=None)
                 st.session_state['audio_data'] = (y, sr)
-                st.session_state['last_file'] = uploaded_file.name
+                st.session_state['last_file'] = fname
                 st.session_state['prediction_result'] = None
 
             y, sr = st.session_state['audio_data']
@@ -562,7 +582,7 @@ def dashboard_page():
                     st.error("🚫 Guest limit reached (10/10). Please create an account to continue.")
                 else:
                     with st.spinner("Processing audio & extracting features..."):
-                        res = run_inference(uploaded_file.name, y, sr, threshold, sensitivity, strategy)
+                        res = run_inference(fname, y, sr, threshold, sensitivity, strategy)
                         if res:
                             st.session_state['prediction_result'] = res
                             st.success("Analysis Complete!")
