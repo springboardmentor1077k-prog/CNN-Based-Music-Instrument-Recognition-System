@@ -6,6 +6,7 @@ import hashlib
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
+import seaborn as sns
 import numpy as np
 from fpdf import FPDF
 import tempfile
@@ -118,6 +119,32 @@ def plot_mel_spectrogram(y, sr):
     ax.set_title("Mel Spectrogram (Frequency-Domain)")
     plt.tight_layout()
     return fig
+
+
+def plot_timeline_heatmap(timeline_data):
+    # Prepare data for Heatmap
+    # X-axis: Time (Window Index or Seconds)
+    # Y-axis: Instruments
+    
+    # Extract times and instruments
+    times = [f"{t['start_time']:.1f}s" for t in timeline_data]
+    instruments = [INSTRUMENT_MAP.get(c, c) for c in CLASS_NAMES] 
+    
+    # Build matrix (Instruments x Time)
+    data_matrix = np.zeros((len(instruments), len(times)))
+    
+    for t_idx, window in enumerate(timeline_data):
+        for i_idx, code in enumerate(CLASS_NAMES):
+            data_matrix[i_idx, t_idx] = window['scores'][code]
+            
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.heatmap(data_matrix, xticklabels=times, yticklabels=instruments, cmap="Greens", annot=False, ax=ax, vmin=0, vmax=1)
+    ax.set_title("Instrument Activation Timeline")
+    ax.set_xlabel("Time Segment (Start)")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    return fig
+
 
 
 # --- Export Logic ---
@@ -347,6 +374,20 @@ def run_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mea
     logits = model.predict(batch_tensor, verbose=0)
     probabilities = tf.nn.softmax(logits).numpy()
 
+    # Capture Timeline Data
+    timeline_data = []
+    for i in range(len(probabilities)):
+        window_start = i * (stride / sr)
+        window_end = window_start + (window_size / sr)
+        
+        # Create a dict for this window
+        win_data = {
+            "start_time": float(window_start),
+            "end_time": float(window_end),
+            "scores": {CLASS_NAMES[j]: float(probabilities[i][j]) for j in range(len(CLASS_NAMES))}
+        }
+        timeline_data.append(win_data)
+
     # 4. Aggregation Strategy
     if strategy == "Max":
         # Take the maximum confidence across all windows for each class
@@ -383,6 +424,7 @@ def run_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mea
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         },
         "predictions": predictions,
+        "timeline": timeline_data,
         "threshold": threshold,
         "sensitivity": sensitivity,
         "strategy": strategy,
@@ -565,6 +607,15 @@ def dashboard_page():
             st.info("No distinct instruments detected above threshold.")
 
         st.write("")
+
+        # Timeline Analysis
+        with st.expander("📈 Temporal Timeline Analysis", expanded=True):
+             fig_timeline = plot_timeline_heatmap(res['timeline'])
+             st.pyplot(fig_timeline)
+             st.session_state['plot_timeline_path'] = os.path.join(tempfile.gettempdir(), "temp_timeline.png")
+             fig_timeline.savefig(st.session_state['plot_timeline_path'])
+        
+        st.write("")
         
         # Detailed Progress Bars
         col_res1, col_res2 = st.columns([2, 1])
@@ -588,12 +639,17 @@ def dashboard_page():
                 use_container_width=True
             )
             
+            pdf_plots = [
+                st.session_state.get('plot_wav_path'),
+                st.session_state.get('plot_spec_path'),
+                st.session_state.get('plot_timeline_path')
+            ]
+            # Filter out None values
+            pdf_plots = [p for p in pdf_plots if p is not None]
+
             pdf_bytes = generate_pdf_report(
                 res,
-                plots=[
-                    st.session_state.get('plot_wav_path'),
-                    st.session_state.get('plot_spec_path')
-                ]
+                plots=pdf_plots
             )
             st.download_button(
                 label="📕 Download PDF Report",
