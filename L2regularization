@@ -1,0 +1,190 @@
+# ============================
+# FIX: Disable oneDNN (Windows CPU fix)
+# ============================
+import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+# ============================
+# Imports
+# ============================
+import numpy as np
+import librosa
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    classification_report,
+    precision_score,
+    recall_score,
+    f1_score
+)
+
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import (
+    Conv2D, MaxPooling2D, Flatten,
+    Dense, Dropout, BatchNormalization
+)
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import l2
+
+# ============================
+# Step 1: Load Dataset
+# ============================
+DATASET_PATH = "datasets"
+N_MELS = 32
+DURATION = 2  # seconds
+
+X = []
+y = []
+label_map = {}
+label_index = 0
+
+for instrument in os.listdir(DATASET_PATH):
+    instrument_path = os.path.join(DATASET_PATH, instrument)
+    if os.path.isdir(instrument_path):
+        label_map[label_index] = instrument
+        files = [f for f in os.listdir(instrument_path) if f.endswith(".wav")]
+        print(f"{instrument}: {len(files)} files")
+
+        for file in files:
+            file_path = os.path.join(instrument_path, file)
+            audio, sr = librosa.load(file_path, duration=DURATION)
+
+            mel_spec = librosa.feature.melspectrogram(
+                y=audio, sr=sr, n_mels=N_MELS
+            )
+            mel_spec_db = librosa.power_to_db(mel_spec)
+            mel_spec_db = mel_spec_db[..., np.newaxis]
+
+            X.append(mel_spec_db)
+            y.append(label_index)
+
+        label_index += 1
+
+X = np.array(X)
+y = to_categorical(y, num_classes=label_index)
+
+print("Dataset shape:", X.shape, y.shape)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# ============================
+# Step 2: CNN with L2 Regularization
+# ============================
+input_shape = (N_MELS, X.shape[2], 1)
+num_classes = label_index
+l2_lambda = 0.001
+
+model = Sequential([
+
+    Conv2D(16, (3, 3), activation='relu', padding='same',
+           kernel_regularizer=l2(l2_lambda),
+           input_shape=input_shape),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+    Dropout(0.1),
+
+    Conv2D(32, (3, 3), activation='relu', padding='same',
+           kernel_regularizer=l2(l2_lambda)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+    Dropout(0.15),
+
+    Conv2D(64, (3, 3), activation='relu', padding='same',
+           kernel_regularizer=l2(l2_lambda)),
+    BatchNormalization(),
+    MaxPooling2D((2, 2)),
+    Dropout(0.2),
+
+    Flatten(),
+    Dense(128, activation='relu',
+          kernel_regularizer=l2(l2_lambda)),
+    BatchNormalization(),
+    Dropout(0.3),
+
+    Dense(num_classes, activation='softmax')
+])
+
+model.compile(
+    optimizer=Adam(learning_rate=0.0001),
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+model.summary()
+
+# ============================
+# Step 3: Train
+# ============================
+history = model.fit(
+    X_train, y_train,
+    epochs=20,
+    batch_size=4,
+    validation_split=0.2,
+    verbose=1
+)
+
+# ============================
+# Step 4: Evaluate
+# ============================
+loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+print(f"\nTest Accuracy: {accuracy * 100:.2f}%")
+print(f"Test Loss: {loss:.4f}")
+
+# ============================
+# Step 5: Precision, Recall, F1
+# ============================
+y_pred_probs = model.predict(X_test)
+y_pred = np.argmax(y_pred_probs, axis=1)
+y_true = np.argmax(y_test, axis=1)
+
+# Weighted metrics
+precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
+recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
+f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
+
+print("\nEvaluation Metrics:")
+print(f"Precision: {precision:.4f}")
+print(f"Recall:    {recall:.4f}")
+print(f"F1 Score:  {f1:.4f}")
+
+# Robust classification report (handles missing classes in test set)
+unique_labels_in_test = np.unique(y_true)
+target_names = [label_map[i] for i in unique_labels_in_test]
+
+print("\nClassification Report:")
+print(classification_report(
+    y_true,
+    y_pred,
+    labels=unique_labels_in_test,
+    target_names=target_names,
+    zero_division=0
+))
+
+# ============================
+# Step 6: Plot Curves
+# ============================
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.title('Accuracy Curve')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Loss Curve')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
