@@ -8,6 +8,7 @@ import librosa.display
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import pandas as pd
 from fpdf import FPDF
 import tempfile
 import base64
@@ -121,29 +122,66 @@ def plot_mel_spectrogram(y, sr):
     return fig
 
 
-def plot_timeline_heatmap(timeline_data):
-    # Prepare data for Heatmap
-    # X-axis: Time (Window Index or Seconds)
-    # Y-axis: Instruments
-    
-    # Extract times and instruments
-    times = [f"{t['start_time']:.1f}s" for t in timeline_data]
-    instruments = [INSTRUMENT_MAP.get(c, c) for c in CLASS_NAMES] 
-    
-    # Build matrix (Instruments x Time)
-    data_matrix = np.zeros((len(instruments), len(times)))
-    
+def plot_timeline_linechart(timeline_data, smoothing_window=1):
+    # Prepare data for Line Chart
+    # Convert list of dicts to DataFrame for easier manipulation
+    records = []
     for t_idx, window in enumerate(timeline_data):
-        for i_idx, code in enumerate(CLASS_NAMES):
-            data_matrix[i_idx, t_idx] = window['scores'][code]
-            
+        for code in CLASS_NAMES:
+            records.append({
+                "Time (s)": window['start_time'],
+                "Instrument": INSTRUMENT_MAP.get(code, code),
+                "Confidence": window['scores'][code]
+            })
+    
+    df = pd.DataFrame(records)
+    
+    # Apply Smoothing (Moving Average) if window > 1
+    if smoothing_window > 1:
+        # Group by Instrument and apply rolling mean
+        df["Confidence"] = df.groupby("Instrument")["Confidence"].transform(
+            lambda x: x.rolling(window=smoothing_window, min_periods=1).mean()
+        )
+
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.heatmap(data_matrix, xticklabels=times, yticklabels=instruments, cmap="Greens", annot=False, ax=ax, vmin=0, vmax=1)
-    ax.set_title("Instrument Activation Timeline")
-    ax.set_xlabel("Time Segment (Start)")
-    plt.xticks(rotation=45)
+    sns.lineplot(data=df, x="Time (s)", y="Confidence", hue="Instrument", ax=ax, palette="tab10", linewidth=2)
+    
+    ax.set_title(f"Instrument Activation Timeline (Smoothing: {smoothing_window})")
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel("Confidence Score")
     plt.tight_layout()
     return fig
+
+
+def plot_timeline_heatmap(timeline_data, smoothing_window=1):
+    # Prepare data for Heatmap
+    records = []
+    for t_idx, window in enumerate(timeline_data):
+        for code in CLASS_NAMES:
+            records.append({
+                "Time (s)": window['start_time'],
+                "Instrument": INSTRUMENT_MAP.get(code, code),
+                "Confidence": window['scores'][code]
+            })
+    
+    df = pd.DataFrame(records)
+    
+    # Apply Smoothing
+    if smoothing_window > 1:
+        df["Confidence"] = df.groupby("Instrument")["Confidence"].transform(
+            lambda x: x.rolling(window=smoothing_window, min_periods=1).mean()
+        )
+
+    # Pivot for Heatmap: Rows=Instruments, Cols=Time
+    pivot_df = df.pivot(index="Instrument", columns="Time (s)", values="Confidence")
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.heatmap(pivot_df, cmap="Greens", ax=ax, vmin=0, vmax=1, cbar_kws={'label': 'Confidence'})
+    ax.set_title(f"Instrument Activation Heatmap (Smoothing: {smoothing_window})")
+    plt.tight_layout()
+    return fig
+
+
 
 
 
@@ -240,7 +278,7 @@ def load_css():
         /* Hide Streamlit Branding */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
+        /* header {visibility: hidden;} - Restored to allow sidebar expansion */
         
         /* Custom Fonts & Colors */
         .block-container {
@@ -320,14 +358,14 @@ def load_model_cached():
         return None
 
 
-def run_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mean"):
+def run_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mean", stride_seconds=1.5):
     model = load_model_cached()
     if model is None:
         return None
 
     # 1. Preprocessing: Slice Audio into 3-second windows
     window_size = int(3.0 * sr)
-    stride = int(1.5 * sr)
+    stride = int(stride_seconds * sr)
 
     windows = []
     # Pad if shorter than window
@@ -432,6 +470,7 @@ def run_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mea
         "threshold": threshold,
         "sensitivity": sensitivity,
         "strategy": strategy,
+        "stride_seconds": stride_seconds,
     }
     return result
 
@@ -519,6 +558,12 @@ def dashboard_page():
     st.sidebar.header("⚙️ Advanced Settings")
     threshold = st.sidebar.slider("Detection Threshold", 0.0, 1.0, 0.4, 0.05)
     sensitivity = st.sidebar.slider("Model Sensitivity", 0.5, 1.5, 1.0, 0.1)
+    
+    st.sidebar.subheader("Temporal Analysis")
+    stride_seconds = st.sidebar.slider("Time Step (Resolution)", 0.5, 3.0, 1.5, 0.5, help="How often the model makes a prediction. Smaller step = higher detail but slower processing.")
+    smoothing_window = st.sidebar.slider("Smoothing Window", 1, 5, 1, 1, help="Moving average window size to smooth out jittery predictions.")
+    viz_mode = st.sidebar.radio("Timeline View", ["Line Chart", "Heatmap"], index=0, horizontal=True)
+    
     strategy = st.sidebar.selectbox("Aggregation Strategy", ["Mean", "Max"], 0)
     st.sidebar.divider()
     if st.sidebar.button("Logout"):
@@ -582,7 +627,7 @@ def dashboard_page():
                     st.error("🚫 Guest limit reached (10/10). Please create an account to continue.")
                 else:
                     with st.spinner("Processing audio & extracting features..."):
-                        res = run_inference(fname, y, sr, threshold, sensitivity, strategy)
+                        res = run_inference(fname, y, sr, threshold, sensitivity, strategy, stride_seconds)
                         if res:
                             st.session_state['prediction_result'] = res
                             st.success("Analysis Complete!")
@@ -630,7 +675,11 @@ def dashboard_page():
 
         # Timeline Analysis
         with st.expander("📈 Temporal Timeline Analysis", expanded=True):
-             fig_timeline = plot_timeline_heatmap(res['timeline'])
+             if viz_mode == "Line Chart":
+                 fig_timeline = plot_timeline_linechart(res['timeline'], smoothing_window=smoothing_window)
+             else:
+                 fig_timeline = plot_timeline_heatmap(res['timeline'], smoothing_window=smoothing_window)
+                 
              st.pyplot(fig_timeline)
              st.session_state['plot_timeline_path'] = os.path.join(tempfile.gettempdir(), "temp_timeline.png")
              fig_timeline.savefig(st.session_state['plot_timeline_path'])
