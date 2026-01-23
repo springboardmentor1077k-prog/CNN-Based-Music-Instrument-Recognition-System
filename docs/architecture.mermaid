@@ -1,0 +1,28 @@
+graph LR
+    subgraph Input
+    A[Audio Input<br/>(WAV/MP3)]
+    end
+
+    subgraph Preprocessing
+    B[Resample to 16kHz] --> C[Mono Conversion]
+    C --> D[Silence Removal]
+    D --> E[Windowing<br/>(3s segments)]
+    end
+
+    subgraph Feature_Extraction
+    E --> F[STFT]
+    F --> G[Mel-Spectrogram<br/>(224x224 RGB)]
+    G --> H[Log-dB Scaling]
+    end
+
+    subgraph Model
+    H --> I[CNN Backbone<br/>(4 Blocks)]
+    I --> J[Global Avg Pooling]
+    J --> K[Softmax Classifier]
+    end
+
+    subgraph Output
+    K --> L[Dashboard UI<br/>(Prediction)]
+    end
+
+    A --> B
