@@ -1,22 +1,33 @@
+import streamlit as st
+st.set_page_config(
+    page_title="InstruNet AI",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
 import numpy as np
 import librosa.display
 import sys
 from pathlib import Path
 import tempfile
-import streamlit as st
 import librosa
 import matplotlib.pyplot as plt
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(ROOT))
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from backend.auth import (
+    create_users_table,
+    register_user,
+    authenticate_user
+)
+
+
+create_users_table()
 
 from backend.pipeline import run_pipeline
 from backend.export import export_json, export_pdf
-
-st.set_page_config(
-    page_title="InstruNet AI",
-    layout="wide"
-)
 
 # ---------------- SESSION STATE ----------------
 if "logged_in" not in st.session_state:
@@ -98,7 +109,6 @@ section[data-testid="stSidebar"] [data-testid="stFileUploader"] * {
 }
 
 /* ================= POPUP MESSAGES ================= */
-/* ================= POPUP MESSAGES - DARK THEME OPTIMIZED ================= */
 
 /* Base styles for all alerts */
 .stAlert,
@@ -234,8 +244,105 @@ section[data-testid="stSidebar"] [data-testid="stFileUploader"] * {
 .stExpanderHeader svg {
     stroke: white !important;
 }
+
+/* ================= MOBILE RESPONSIVENESS ================= */
+
+/* Phones */
+@media (max-width: 768px) {
+
+    h1 {
+        font-size: 1.6rem !important;
+        text-align: center !important;
+    }
+
+    h2 {
+        font-size: 1.3rem !important;
+    }
+
+    h3 {
+        font-size: 1.1rem !important;
+    }
+
+    .block-container {
+        padding: 1rem !important;
+    }
+
+    /* Buttons full width */
+    .stButton > button {
+        width: 100% !important;
+        font-size: 1rem !important;
+    }
+
+    /* File uploader */
+    [data-testid="stFileUploader"] {
+        padding: 12px !important;
+    }
+
+    /* Charts scale nicely */
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+    h1 {
+        font-size: 2rem !important;
+    }
+
+    .block-container {
+        padding: 1.5rem !important;
+    }
+}
             
-            
+/* ================= EXPANDER VISIBILITY FIX ================= */
+
+/* Expander header base */
+div[data-testid="stExpander"] > details > summary {
+    background: linear-gradient(135deg, #1e293b, #334155) !important;
+    color: white !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    border-left: 4px solid #3b82f6 !important; /* blue accent */
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease-in-out !important;
+}
+
+/* Hover effect (VERY IMPORTANT) */
+div[data-testid="stExpander"] > details > summary:hover {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45) !important;
+}
+
+/* When expanded */
+div[data-testid="stExpander"] > details[open] > summary {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+}
+
+/* Expander arrow */
+div[data-testid="stExpander"] summary svg {
+    stroke: white !important;
+    transform: scale(1.2);
+}
+
+/* Content area */
+div[data-testid="stExpander"] > details > div {
+    background: rgba(255,255,255,0.95) !important;
+    color: #111827 !important;
+    border-radius: 0 0 12px 12px !important;
+    padding: 14px !important;
+}
+
+/* Text inside expander content */
+div[data-testid="stExpander"] > details > div * {
+    color: #111827 !important;
+}
+
+                                
 </style>
 """, unsafe_allow_html=True)
 
@@ -255,176 +362,192 @@ def home_page():
             st.session_state.page = "login"
             st.rerun()
 
-# ---------------- LOGIN PAGE ----------------
+#------login page--------
 def login_page():
-    container = st.container()
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        st.markdown("<h1 style='text-align:center; color:#6C63FF'>🎵 InstruNet AI</h1>", unsafe_allow_html=True)
-        st.markdown("<h3 style='text-align:center; color:#333'>CNN-Based Music Instrument Recognition System</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align:center; color:#555'>Upload audio • Analyze • Detect instruments</p>", unsafe_allow_html=True)
-        st.markdown("---")
+        st.subheader("🔐 Login")
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-        if st.button("Login", key="login"):
-            if username.strip() and password.strip():
+
+        if st.button("Login"):
+            if authenticate_user(username, password):
                 st.session_state.logged_in = True
                 st.session_state.user = username
                 st.session_state.page = "app"
-                st.success("✅Logged in successfully!")
-
+                st.success("Login successful!")
                 st.rerun()
             else:
-                st.error("Username and password cannot be empty")
+                st.error("Invalid username or password")
+
+        st.divider()
+        st.subheader("📝 Register")
+
+        new_user = st.text_input("New Username")
+        new_pass = st.text_input("New Password", type="password")
+
+        if st.button("Register"):
+            if register_user(new_user, new_pass):
+                st.success("User registered! Please login.")
+            else:
+                st.error("Username already exists")
 
 # ---------------- DASHBOARD ----------------
 def main_app():
+    # ---------------- SIDEBAR ----------------
     with st.sidebar:
-        # User info
-        st.markdown(f"<div style='text-align:center; margin-bottom:20px;'>"
-                    f"<div style='width:70px;height:70px;background-color:#1E90FF;"
-                    f"border-radius:50%;display:flex;justify-content:center;align-items:center;"
-                    f"font-size:28px;color:white;margin:0 auto;'>{st.session_state.user[0].upper()}</div>"
-                    f"<p style='text-align:center;margin-top:5px;font-weight:bold;'>{st.session_state.user}</p>"
-                    f"</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style='text-align:center; margin-bottom:20px;'>
+                <div style='width:70px;height:70px;background-color:#1E90FF;
+                border-radius:50%;display:flex;justify-content:center;align-items:center;
+                font-size:28px;color:white;margin:0 auto;'>
+                    {st.session_state.user[0].upper()}
+                </div>
+                <p style='text-align:center;margin-top:5px;font-weight:bold;'>
+                    {st.session_state.user}
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
         st.header("Controls")
-        audio = st.file_uploader("Upload audio", ["wav","mp3"])
+        audio = st.file_uploader("Upload audio", ["wav", "mp3"])
         threshold = st.slider("Detection threshold", 0.1, 0.9, 0.3)
-        aggregation = st.selectbox("Aggregation", ["mean","max","topk_mean"])
-        if st.button("▶ Predict", key="predict"):
-            run = True
-        else:
-            run = False
+        aggregation = st.selectbox("Aggregation", ["mean", "max", "topk_mean"])
 
-        st.markdown("<br><br><br>", unsafe_allow_html=True)
-        if st.button("↩️ Logout", key="logout"):
-            st.success("Logged out successfully!")
+        run = st.button("▶ Predict",disabled=audio is None)
+
+        st.markdown("<br><br>", unsafe_allow_html=True)
+
+        if st.button("↩️ Logout"):
             st.session_state.logged_in = False
             st.session_state.page = "home"
             st.rerun()
 
-    # Main content
+    # ---------------- MAIN CONTENT ----------------
     st.title("🎵 InstruNet AI")
+
     if audio is None:
         st.info("Upload an audio file to begin.")
-        st.stop()
+        return
 
-    st.success(f"🎧 Audio loaded successfully: **{audio.name}**")
+    st.success(f"🎧 Audio loaded: **{audio.name}**")
     st.audio(audio)
 
+    # ---------------- RUN MODEL ----------------
     if run:
         with st.spinner("Running inference..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
                 tmp.write(audio.read())
-                st.session_state.audio_path = tmp.name  
+                st.session_state.audio_path = tmp.name
+
             st.session_state.result = run_pipeline(
                 audio_path=st.session_state.audio_path,
                 original_filename=audio.name,
                 threshold=threshold,
                 aggregation=aggregation
-            )       
-            st.success("✅ Analysis completed successfully!")
+            )
+
+        st.success("✅ Analysis completed")
 
     result = st.session_state.get("result")
     if result is None:
         st.info("Click Predict to analyze.")
-        st.stop()
+        return
 
     # ---------------- DETECTED INSTRUMENTS ----------------
     st.markdown("### 🎯 Detected Instruments")
     final = result["predictions"]["final_instruments"]
+
     if not final:
         st.warning("No dominant instruments detected.")
     else:
         for inst in final:
             st.success(inst.upper())
 
-    st.info("💡 Click on the respective sections below to view detailed results.")
     st.divider()
-    
+
     # ---------------- CONFIDENCE SCORES ----------------
     st.subheader("📊 Confidence Scores")
-    with st.expander("Confidence scores"):
+    with st.expander("📊 Click to view Confidence Scores"):
         scores = result["predictions"]["confidence_scores"]
         instruments = list(scores.keys())
         values = list(scores.values())
 
-        fig, ax = plt.subplots(figsize=(6, 3))  # smaller fixed height
-        bars = ax.barh(instruments, values, color="#3b82f6")  # blue bars
+        fig, ax = plt.subplots(figsize=(5.5, 2.2), dpi=100)
+        ax.barh(instruments, values)
 
         for i, v in enumerate(values):
-            ax.text(v + 0.01, i, f"{v:.2f}", color='white', va='center', fontweight='bold')
+            ax.text(v + 0.01, i, f"{v:.2f}", va="center")
 
-        ax.set_xlim(0,1)
-        ax.set_xlabel("Confidence",color='white')
-        ax.set_title("Instrument Confidence Scores", color='white')
-        ax.set_facecolor("#0f172a")
-        fig.patch.set_facecolor("#0f172a")  # match dark theme
-        ax.tick_params(axis='x', colors='white')
-        ax.tick_params(axis='y', colors='white')
-        ax.spines['bottom'].set_color('white')
-        ax.spines['left'].set_color('white')
-        ax.spines['top'].set_color('white')
-        ax.spines['right'].set_color('white')
-
+        ax.set_xlim(0, 1)
+        ax.set_xlabel("Confidence")
         st.pyplot(fig)
-    st.divider()
+
+    # ---------------- AUDIO WAVEFORM ----------------
+    st.subheader("🔊 Audio Waveform")
+    with st.expander("🔊 Click to view Audio Waveform"):
+        y, sr = librosa.load(st.session_state.audio_path, sr=16000)
+
+        fig, ax = plt.subplots(figsize=(8.5, 2.0), dpi=100)
+        librosa.display.waveshow(y, sr=sr, ax=ax)
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Amplitude")
+        st.pyplot(fig)
 
     # ---------------- MEL SPECTROGRAM ----------------
-    st.subheader("🎧 Mel Spectrogram")    
-    with st.expander("🎧 Mel-Spectrogram"):
-        if "audio_path" not in st.session_state:
-           st.warning("Please run prediction first.")
-           st.stop()
-
-        y, sr = librosa.load(st.session_state.audio_path, sr=16000)
-        mel = librosa.feature.melspectrogram(y=y, sr=sr)
+    st.subheader("🎧 Mel Spectrogram")
+    with st.expander("🎧 Click to view Mel Spectrogram"):
+        mel = librosa.feature.melspectrogram(
+            y=y,
+            sr=sr,
+            n_mels=64
+        )
         mel_db = librosa.power_to_db(mel, ref=np.max)
 
-        fig, ax = plt.subplots(figsize=(8, 3))
+        fig, ax = plt.subplots(figsize=(7.5, 2.2), dpi=100)
         img = librosa.display.specshow(
             mel_db,
             sr=sr,
             x_axis="time",
             y_axis="mel",
-            cmap="magma",
             ax=ax
         )
-        fig.colorbar(img, ax=ax, format="%+2.0f dB")
-        st.pyplot(fig)    
-    st.divider()
+        fig.colorbar(img, ax=ax)
+        st.pyplot(fig)
 
-    # ---------------- TIMELINES ----------------
+    # ---------------- TIMELINE ----------------
     st.subheader("🕒 Instrument Confidence Timeline")
-    with st.expander("🕒 Instrument Confidence Timeline"):
+    with st.expander("🕒 Click to view Confidence Timeline"):
         timelines = np.array(result["predictions"]["timelines"])
         labels = list(result["predictions"]["confidence_scores"].keys())
+        t = np.arange(timelines.shape[0])
 
-        time_axis = np.arange(timelines.shape[0])
-
-        fig, ax = plt.subplots(figsize=(10, 4))
+        fig, ax = plt.subplots(figsize=(8.5, 2.6), dpi=100)
         for i, label in enumerate(labels):
-            ax.plot(
-                time_axis,
-                timelines[:, i],
-                label=label,
-                linewidth=2
-            )
+            ax.plot(t, timelines[:, i], label=label)
 
-        ax.set_xlabel("Time Segments (2s each)")
-        ax.set_ylabel("Confidence")
         ax.set_ylim(0, 1)
-        ax.legend(ncol=3, fontsize=8)
-        ax.grid(alpha=0.3)
-
+        ax.set_xlabel("Time Segments (2s)")
+        ax.set_ylabel("Confidence")
+        ax.legend(ncol=4, fontsize=8)
         st.pyplot(fig)
-    st.divider()
 
     # ---------------- EXPORT ----------------
     st.markdown("### 📤 Export")
-    st.download_button("Download JSON", export_json(result), "instrunet_result.json")
-    st.download_button("Download PDF", export_pdf(result), "instrunet_result.pdf")
+    st.download_button(
+        "Download JSON",
+        export_json(result),
+        "instrunet_result.json"
+    )
+    st.download_button(
+        "Download PDF",
+        export_pdf(result),
+        "instrunet_result.pdf"
+    )
+
 
 # ---------------- PAGE ROUTER ----------------
 if st.session_state.page == "home":
