@@ -367,8 +367,9 @@ def login_page():
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         st.subheader("🔐 Login")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
 
         if st.button("Login"):
             if authenticate_user(username, password):
@@ -381,16 +382,33 @@ def login_page():
                 st.error("Invalid username or password")
 
         st.divider()
+
+        if st.button("📝 New user? Register"):
+            st.session_state.page = "register"
+            st.rerun()
+
+#----Register-----
+def register_page():
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
         st.subheader("📝 Register")
 
-        new_user = st.text_input("New Username")
-        new_pass = st.text_input("New Password", type="password")
+        new_user = st.text_input("New Username", key="reg_user")
+        new_pass = st.text_input("New Password", type="password", key="reg_pass")
 
         if st.button("Register"):
             if register_user(new_user, new_pass):
-                st.success("User registered! Please login.")
+                st.success("User registered successfully!")
+                st.session_state.page = "login"
+                st.rerun()
             else:
                 st.error("Username already exists")
+
+        st.divider()
+
+        if st.button("🔐 Already have an account? Login"):
+            st.session_state.page = "login"
+            st.rerun()
 
 # ---------------- DASHBOARD ----------------
 def main_app():
@@ -548,12 +566,17 @@ def main_app():
         "instrunet_result.pdf"
     )
 
+#-----Page router-----    
 
-# ---------------- PAGE ROUTER ----------------
 if st.session_state.page == "home":
     home_page()
+
 elif st.session_state.page == "login":
     login_page()
+
+elif st.session_state.page == "register":
+    register_page()
+
 elif st.session_state.page == "app":
     if st.session_state.logged_in:
         main_app()
