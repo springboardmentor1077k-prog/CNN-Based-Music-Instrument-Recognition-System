@@ -4,6 +4,7 @@ numpy==1.26.4
 librosa==0.11.0
 soundfile==0.13.1
 h5py>=3.11.0
+scipy>=1.11
 
 # Frontend
 streamlit==1.36.0

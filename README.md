@@ -97,9 +97,15 @@ The deployed app can be **paused, redeployed, or permanently deleted** at any ti
 
 ---
 
-## 🔐 Authentication Note
+## 🔐 Authentication
 
-The login functionality implemented in the app is **UI-level only** and is intended purely for demonstration purposes. It does not include backend authentication or user management.
+The application includes a basic authentication system implemented using:
+
+- SQLite database (`users.db`)
+- Backend authentication logic (`backend/auth.py`)
+- Username and password-based login & registration
+
+This authentication layer is intended for **academic and demonstration purposes only** and does not include advanced security features such as password hashing, role-based access control, or session expiry.
 
 ---
 
@@ -118,15 +124,22 @@ Refer to `requirements.txt` for the complete dependency list.
 
 ---
 
+## 🧹 Repository Hygiene
+
+Large files such as trained models (`.keras`), databases (`.db`), virtual environments, logs, and environment files are excluded using `.gitignore` to keep the repository clean and secure.
+
+
 ## 📌 Future Enhancements
 
-* Proper backend authentication
+* Production-grade backend authentication (hashed passwords, JWT, RBAC)
 * Improved inference speed and model optimization
 * Support for longer and streaming audio inputs
 * Advanced analytics and visualization modules
 
 ---
-
 ## 📄 License
 
-This project currently does not include a license. A license may be added later if required.
+This project is licensed under the **MIT License**.
+
+You are free to use, modify, and distribute this software for academic and educational purposes.
+See the `LICENSE` file for full details.

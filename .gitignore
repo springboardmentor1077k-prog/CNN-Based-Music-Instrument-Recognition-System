@@ -13,3 +13,7 @@ model/multilabel_cnn_improved.keras
 
 #Database
 *.db
+
+# Environment & logs
+.env
+*.log
