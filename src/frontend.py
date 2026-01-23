@@ -106,7 +106,9 @@ def login(username, password):
 def plot_waveform(y, sr):
     fig, ax = plt.subplots(figsize=(10, 2))
     librosa.display.waveshow(y, sr=sr, ax=ax)
-    ax.set_title("Waveform (Amplitude over Time)")
+    ax.set_title("Waveform")
+    ax.set_ylabel("Amplitude")
+    ax.set_xlabel("Time (s)")
     plt.tight_layout()
     return fig
 
@@ -117,7 +119,9 @@ def plot_mel_spectrogram(y, sr):
     M_db = librosa.amplitude_to_db(M, ref=np.max)
     img = librosa.display.specshow(M_db, sr=sr, x_axis="time", y_axis="mel", ax=ax)
     fig.colorbar(img, ax=ax, format="%+2.0f dB")
-    ax.set_title("Mel Spectrogram (Frequency-Domain)")
+    ax.set_title("Mel Spectrogram")
+    ax.set_ylabel("Frequency (Mel)")
+    ax.set_xlabel("Time (s)")
     plt.tight_layout()
     return fig
 
@@ -257,14 +261,27 @@ def generate_pdf_report(result_obj, plots=None):
 
     # Add plots if provided (as file paths)
     if plots:
+        pdf.add_page()
+        pdf.chapter_title("5. Visualizations")
+        
+        titles = [
+            "Waveform Analysis (Time Domain)",
+            "Spectral Analysis (Frequency Domain)",
+            "Temporal Timeline Analysis"
+        ]
+        
         for i, plot_path in enumerate(plots):
-            # Add a new page for every 2 plots or for the first plot
-            if i % 2 == 0:
-                pdf.add_page()
-                pdf.chapter_title(f"Visualizations (Part {i // 2 + 1})")
+            # If we have a title for this plot index, use it
+            if i < len(titles):
+                pdf.set_font("Arial", "B", 11)
+                pdf.cell(0, 10, titles[i], 0, 1, "L")
             
             pdf.image(plot_path, x=10, w=180)
             pdf.ln(5)
+            
+            # Check for page break
+            if pdf.get_y() > 250:
+                pdf.add_page()
 
 
     return pdf.output(dest="S").encode("latin-1")
@@ -274,54 +291,49 @@ def generate_pdf_report(result_obj, plots=None):
 
 def load_css():
     st.markdown("""
-        <style>
-        /* Hide Streamlit Branding */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        /* header {visibility: hidden;} - Restored to allow sidebar expansion */
-        
-        /* Custom Fonts & Colors */
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-        h1 {
-            color: #2c3e50;
-            font-family: 'Helvetica Neue', sans-serif;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 0.5rem;
-        }
-        h2, h3 {
-            color: #34495e;
-            font-family: 'Helvetica Neue', sans-serif;
-        }
-        
-        /* Card-like styling for sections */
-        .stExpander {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-        }
-        
-        /* Button Styling */
-        .stButton button {
-            background-color: #4CAF50; 
-            color: white; 
-            border-radius: 8px;
-            font-weight: bold;
-        }
-        .stButton button:hover {
-            background-color: #45a049;
-            border-color: #45a049;
-        }
-        
-        /* Metric/Success Cards */
-        div[data-testid="stMetricValue"] {
-            font-size: 1.5rem;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+h1 {
+    color: #2c3e50;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+h2, h3 {
+    color: #34495e;
+    font-family: 'Helvetica Neue', sans-serif;
+}
+.icon-mar {
+    margin-right: 10px;
+    color: #4CAF50;
+}
+.stExpander {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+}
+.stButton button {
+    background-color: #4CAF50; 
+    color: white; 
+    border-radius: 8px;
+    font-weight: bold;
+}
+.stButton button:hover {
+    background-color: #45a049;
+    border-color: #45a049;
+}
+div[data-testid="stMetricValue"] {
+    font-size: 1.5rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # --- Real Inference ---
 
@@ -553,13 +565,13 @@ def dashboard_page():
     load_css()
     
     # Sidebar
-    st.sidebar.title(f"👤 {st.session_state['username']}")
+    st.sidebar.markdown(f"### <i class='fa-solid fa-circle-user icon-mar'></i> {st.session_state['username']}", unsafe_allow_html=True)
     st.sidebar.divider()
-    st.sidebar.header("⚙️ Advanced Settings")
+    st.sidebar.markdown("#### <i class='fa-solid fa-gears icon-mar'></i> Advanced Settings", unsafe_allow_html=True)
     threshold = st.sidebar.slider("Detection Threshold", 0.0, 1.0, 0.4, 0.05)
     sensitivity = st.sidebar.slider("Model Sensitivity", 0.5, 1.5, 1.0, 0.1)
     
-    st.sidebar.subheader("Temporal Analysis")
+    st.sidebar.markdown("#### <i class='fa-solid fa-clock-rotate-left icon-mar'></i> Temporal Analysis", unsafe_allow_html=True)
     stride_seconds = st.sidebar.slider("Time Step (Resolution)", 0.5, 3.0, 1.5, 0.5, help="How often the model makes a prediction. Smaller step = higher detail but slower processing.")
     smoothing_window = st.sidebar.slider("Smoothing Window", 1, 5, 1, 1, help="Moving average window size to smooth out jittery predictions.")
     viz_mode = st.sidebar.radio("Timeline View", ["Line Chart", "Heatmap"], index=0, horizontal=True)
@@ -573,13 +585,13 @@ def dashboard_page():
         st.rerun()
     
     # Main Content
-    st.title("🎵 Instrunet AI")
+    st.markdown("<h1><i class='fa-solid fa-music icon-mar'></i> Instrunet AI</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #7f8c8d;'>Deep Learning Musical Instrument Detection</p>", unsafe_allow_html=True)
     st.markdown("---")
     
     # Input Container
     with st.container():
-        st.subheader("📁 Analysis Input")
+        st.markdown("### <i class='fa-solid fa-folder-open icon-mar'></i> Analysis Input", unsafe_allow_html=True)
         
         tab_upload, tab_record = st.tabs(["📤 Upload File", "🎙️ Record Audio"])
         
@@ -653,14 +665,14 @@ def dashboard_page():
     # Results Section
     if st.session_state.get('prediction_result'):
         st.markdown("---")
-        st.subheader("🎯 Analysis Results")
+        st.markdown("### <i class='fa-solid fa-bullseye icon-mar'></i> Analysis Results", unsafe_allow_html=True)
         res = st.session_state['prediction_result']
         
         # Summary Row
         detected = [p['instrument'] for p in res['predictions'] if p['detected']]
         
         if detected:
-            st.write("### Detected Instruments:")
+            st.write("#### Detected Instruments:")
             cols = st.columns(min(len(detected), 4))
             for i, inst in enumerate(detected):
                 # Display simply without boxes if cols run out
@@ -689,19 +701,19 @@ def dashboard_page():
         # Detailed Progress Bars
         col_res1, col_res2 = st.columns([2, 1])
         with col_res1:
-            st.write("#### Confidence Levels")
+            st.markdown("#### <i class='fa-solid fa-chart-simple icon-mar'></i> Confidence Levels", unsafe_allow_html=True)
             for p in res['predictions']:
                 color = "green" if p['detected'] else "gray"
                 label = f"{p['instrument']} ({p['confidence']*100:.1f}%)"
                 st.progress(p['confidence'], text=label)
         
         with col_res2:
-            st.write("#### Actions")
+            st.markdown("#### <i class='fa-solid fa-toolbox icon-mar'></i> Actions", unsafe_allow_html=True)
             
             # Everyone can download reports
             json_data = generate_json_report(res)
             st.download_button(
-                label="📄 Download JSON Report",
+                label="Download JSON Report",
                 data=json_data,
                 file_name=f"analysis_{uploaded_file.name}.json",
                 mime="application/json",
@@ -721,7 +733,7 @@ def dashboard_page():
                 plots=pdf_plots
             )
             st.download_button(
-                label="📕 Download PDF Report",
+                label="Download PDF Report",
                 data=pdf_bytes,
                 file_name=f"report_{uploaded_file.name}.pdf",
                 mime="application/pdf",
@@ -732,17 +744,17 @@ def dashboard_page():
             
             # Saving to Database (Restricted to Registered Users)
             if st.session_state.get('username') == 'Guest':
-                st.button("💾 Save to History", help="Log in to save results to your account history.", disabled=True, use_container_width=True)
-                st.caption("🔒 Log in to save results to your cloud profile.")
+                st.button("Save to History", help="Log in to save results to your account history.", disabled=True, use_container_width=True)
+                st.markdown("<p style='font-size: 0.8rem; color: #7f8c8d;'><i class='fa-solid fa-lock'></i> Log in to save results to your cloud profile.</p>", unsafe_allow_html=True)
             else:
-                if st.button("💾 Save to History", help="Save this analysis to your account history.", use_container_width=True):
+                if st.button("Save to History", help="Save this analysis to your account history.", use_container_width=True):
                     st.info("Feature coming soon! Database integration (Supabase/PostgreSQL) is in the project roadmap.")
 
     # Power User Section (Footer)
     st.write("")
     st.write("")
     with st.expander("🔧 Model Diagnostics (Power User)", expanded=False):
-        st.write("These metrics represent the overall performance of the model on the test dataset.")
+        st.markdown("<p style='font-size: 0.9rem;'>These metrics represent the overall performance of the model on the test dataset.</p>", unsafe_allow_html=True)
         
         # Paths to static assets
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -753,7 +765,7 @@ def dashboard_page():
 
         # 1. Classification Report (Table)
         if os.path.exists(report_path):
-            st.subheader("Global Classification Report")
+            st.markdown("#### <i class='fa-solid fa-table-list icon-mar'></i> Global Classification Report", unsafe_allow_html=True)
             try:
                 import pandas as pd
                 df_metrics = pd.read_csv(report_path)
