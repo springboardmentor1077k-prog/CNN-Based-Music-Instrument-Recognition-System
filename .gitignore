@@ -10,3 +10,6 @@ __pycache__/
 
 # Ignore ML model
 model/multilabel_cnn_improved.keras
+
+#Database
+*.db
