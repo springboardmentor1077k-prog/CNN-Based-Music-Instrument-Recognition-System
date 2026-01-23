@@ -132,14 +132,16 @@ def plot_timeline_linechart(timeline_data, smoothing_window=1):
     records = []
     for t_idx, window in enumerate(timeline_data):
         for code in CLASS_NAMES:
-            records.append({
-                "Time (s)": window['start_time'],
-                "Instrument": INSTRUMENT_MAP.get(code, code),
-                "Confidence": window['scores'][code]
-            })
-    
+            records.append(
+                {
+                    "Time (s)": window["start_time"],
+                    "Instrument": INSTRUMENT_MAP.get(code, code),
+                    "Confidence": window["scores"][code],
+                }
+            )
+
     df = pd.DataFrame(records)
-    
+
     # Apply Smoothing (Moving Average) if window > 1
     if smoothing_window > 1:
         # Group by Instrument and apply rolling mean
@@ -148,8 +150,16 @@ def plot_timeline_linechart(timeline_data, smoothing_window=1):
         )
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.lineplot(data=df, x="Time (s)", y="Confidence", hue="Instrument", ax=ax, palette="tab10", linewidth=2)
-    
+    sns.lineplot(
+        data=df,
+        x="Time (s)",
+        y="Confidence",
+        hue="Instrument",
+        ax=ax,
+        palette="tab10",
+        linewidth=2,
+    )
+
     ax.set_title(f"Instrument Activation Timeline (Smoothing: {smoothing_window})")
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Confidence Score")
@@ -162,14 +172,16 @@ def plot_timeline_heatmap(timeline_data, smoothing_window=1):
     records = []
     for t_idx, window in enumerate(timeline_data):
         for code in CLASS_NAMES:
-            records.append({
-                "Time (s)": window['start_time'],
-                "Instrument": INSTRUMENT_MAP.get(code, code),
-                "Confidence": window['scores'][code]
-            })
-    
+            records.append(
+                {
+                    "Time (s)": window["start_time"],
+                    "Instrument": INSTRUMENT_MAP.get(code, code),
+                    "Confidence": window["scores"][code],
+                }
+            )
+
     df = pd.DataFrame(records)
-    
+
     # Apply Smoothing
     if smoothing_window > 1:
         df["Confidence"] = df.groupby("Instrument")["Confidence"].transform(
@@ -178,15 +190,14 @@ def plot_timeline_heatmap(timeline_data, smoothing_window=1):
 
     # Pivot for Heatmap: Rows=Instruments, Cols=Time
     pivot_df = df.pivot(index="Instrument", columns="Time (s)", values="Confidence")
-    
+
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.heatmap(pivot_df, cmap="Greens", ax=ax, vmin=0, vmax=1, cbar_kws={'label': 'Confidence'})
+    sns.heatmap(
+        pivot_df, cmap="Greens", ax=ax, vmin=0, vmax=1, cbar_kws={"label": "Confidence"}
+    )
     ax.set_title(f"Instrument Activation Heatmap (Smoothing: {smoothing_window})")
     plt.tight_layout()
     return fig
-
-
-
 
 
 # --- Export Logic ---
@@ -263,96 +274,73 @@ def generate_pdf_report(result_obj, plots=None):
     if plots:
         pdf.add_page()
         pdf.chapter_title("5. Visualizations")
-        
+
         titles = [
             "Waveform Analysis (Time Domain)",
             "Spectral Analysis (Frequency Domain)",
-            "Temporal Timeline Analysis"
+            "Temporal Timeline Analysis",
         ]
-        
+
         for i, plot_path in enumerate(plots):
             # If we have a title for this plot index, use it
             if i < len(titles):
                 pdf.set_font("Arial", "B", 11)
                 pdf.cell(0, 10, titles[i], 0, 1, "L")
-            
+
             pdf.image(plot_path, x=10, w=180)
             pdf.ln(5)
-            
+
             # Check for page break
             if pdf.get_y() > 250:
                 pdf.add_page()
-
 
     return pdf.output(dest="S").encode("latin-1")
 
 
 # --- Styling ---
 
+
 def load_css():
-    st.markdown("""
+    st.markdown(
+        """
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-}
-h1 {
-    color: #2c3e50;
-    font-family: 'Helvetica Neue', sans-serif;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 0.5rem;
-}
-h2, h3 {
-    color: #34495e;
-    font-family: 'Helvetica Neue', sans-serif;
-}
-.icon-mar {
-    margin-right: 10px;
-    color: #4CAF50;
-}
-.stExpander {
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    border: 1px solid #e9ecef;
-}
-.stButton button {
-    background-color: #4CAF50; 
-    color: white; 
-    border-radius: 8px;
-    font-weight: bold;
-}
-.stButton button:hover {
-    background-color: #45a049;
-    border-color: #45a049;
-}
-div[data-testid="stMetricValue"] {
-    font-size: 1.5rem;
-}
+.block-container {padding-top: 2rem; padding-bottom: 2rem;}
+h1 {color: #2c3e50; font-family: 'Helvetica Neue', sans-serif; font-weight: 700; text-align: center; margin-bottom: 0.5rem;}
+h2, h3 {color: #34495e; font-family: 'Helvetica Neue', sans-serif;}
+.icon-mar {margin-right: 10px; color: #4CAF50;}
+.stExpander {background-color: #f8f9fa; border-radius: 10px; border: 1px solid #e9ecef;}
+.stButton button {background-color: #4CAF50; color: white; border-radius: 8px; font-weight: bold;}
+.stButton button:hover {background-color: #45a049; border-color: #45a049;}
+div[data-testid="stMetricValue"] {font-size: 1.5rem;}
+section[data-testid="stSidebar"] > div {padding-top: 2rem;}
 </style>
-""", unsafe_allow_html=True)
+""",
+        unsafe_allow_html=True,
+    )
+
 
 # --- Real Inference ---
+
 
 @st.cache_resource
 def load_model_cached():
     """Loads and caches the Keras model to prevent reloading on every run."""
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     model_path = os.path.join(project_root, "outputs", "instrunet_cnn.keras")
-    
+
     if not os.path.exists(model_path):
         st.error(f"Model not found at {model_path}! Please train the model first.")
         return None
-    
+
     # Check header for HDF5 vs Zip (silent check)
     try:
-        with open(model_path, 'rb') as f:
+        with open(model_path, "rb") as f:
             header = f.read(4)
-        
-        if header.startswith(b'\x89HDF'):
+
+        if header.startswith(b"\x89HDF"):
             # Fallback: Try loading as HDF5 if detected
             try:
                 model = load_model(model_path)
@@ -370,7 +358,9 @@ def load_model_cached():
         return None
 
 
-def run_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mean", stride_seconds=1.5):
+def run_inference(
+    filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mean", stride_seconds=1.5
+):
     model = load_model_cached()
     if model is None:
         return None
@@ -433,12 +423,15 @@ def run_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mea
     for i in range(len(probabilities)):
         window_start = i * (stride / sr)
         window_end = window_start + (window_size / sr)
-        
+
         # Create a dict for this window
         win_data = {
             "start_time": float(window_start),
             "end_time": float(window_end),
-            "scores": {CLASS_NAMES[j]: float(probabilities[i][j]) for j in range(len(CLASS_NAMES))}
+            "scores": {
+                CLASS_NAMES[j]: float(probabilities[i][j])
+                for j in range(len(CLASS_NAMES))
+            },
         }
         timeline_data.append(win_data)
 
@@ -493,55 +486,60 @@ def run_inference(filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mea
 def login_page():
     load_css()
     st.title(APP_TITLE)
-    st.markdown("<h3 style='text-align: center;'>Secure Login</h3>", unsafe_allow_html=True)
+    st.markdown(
+        "<h3 style='text-align: center;'>Secure Login</h3>", unsafe_allow_html=True
+    )
     st.write("")
-    
+
     col_center = st.columns([1, 2, 1])
     with col_center[1]:
         with st.form("login_form"):
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
-            
+
             # Form submit button
             submitted = st.form_submit_button("Login", use_container_width=True)
-            
+
             if submitted:
                 success, msg = login(username, password)
                 if success:
-                    st.session_state['logged_in'] = True
-                    st.session_state['username'] = username
+                    st.session_state["logged_in"] = True
+                    st.session_state["username"] = username
                     st.success(msg)
                     st.rerun()
                 else:
                     st.error(msg)
-        
+
         st.markdown("---")
         # Guest Access
         if st.button("👀 Continue as Guest (Demo)", use_container_width=True):
-            st.session_state['logged_in'] = True
-            st.session_state['username'] = "Guest"
+            st.session_state["logged_in"] = True
+            st.session_state["username"] = "Guest"
             st.rerun()
 
         st.write("")
         if st.button("Create New Account", use_container_width=True):
-            st.session_state['page'] = 'signup'
+            st.session_state["page"] = "signup"
             st.rerun()
+
 
 def signup_page():
     load_css()
     st.title(APP_TITLE)
-    st.markdown("<h3 style='text-align: center;'>Create Account</h3>", unsafe_allow_html=True)
+    st.markdown(
+        "<h3 style='text-align: center;'>Create Account</h3>", unsafe_allow_html=True
+    )
     st.write("")
-    
+
     col_center = st.columns([1, 2, 1])
     with col_center[1]:
         with st.form("signup_form"):
             username = st.text_input("Choose a Username")
             password = st.text_input("Choose a Password", type="password")
             confirm_password = st.text_input("Confirm Password", type="password")
-            
+
             submitted = st.form_submit_button("Sign Up", use_container_width=True)
-            
+
             if submitted:
                 if password != confirm_password:
                     st.error("Passwords do not match.")
@@ -551,126 +549,190 @@ def signup_page():
                     success, msg = signup(username, password)
                     if success:
                         st.success(msg)
-                        st.session_state['page'] = 'login'
+                        st.session_state["page"] = "login"
                         st.rerun()
                     else:
                         st.error(msg)
-    
+
     if st.button("Back to Login", use_container_width=True):
-        st.session_state['page'] = 'login'
+        st.session_state["page"] = "login"
         st.rerun()
 
 
 def dashboard_page():
     load_css()
-    
+
     # Sidebar
-    st.sidebar.markdown(f"### <i class='fa-solid fa-circle-user icon-mar'></i> {st.session_state['username']}", unsafe_allow_html=True)
+    st.sidebar.markdown(
+        f"### <i class='fa-solid fa-circle-user icon-mar'></i> {st.session_state['username']}",
+        unsafe_allow_html=True,
+    )
     st.sidebar.divider()
-    st.sidebar.markdown("#### <i class='fa-solid fa-gears icon-mar'></i> Advanced Settings", unsafe_allow_html=True)
+    st.sidebar.markdown(
+        "#### <i class='fa-solid fa-gears icon-mar'></i> Advanced Settings",
+        unsafe_allow_html=True,
+    )
     threshold = st.sidebar.slider("Detection Threshold", 0.0, 1.0, 0.4, 0.05)
     sensitivity = st.sidebar.slider("Model Sensitivity", 0.5, 1.5, 1.0, 0.1)
-    
-    st.sidebar.markdown("#### <i class='fa-solid fa-clock-rotate-left icon-mar'></i> Temporal Analysis", unsafe_allow_html=True)
-    stride_seconds = st.sidebar.slider("Time Step (Resolution)", 0.5, 3.0, 1.5, 0.5, help="How often the model makes a prediction. Smaller step = higher detail but slower processing.")
-    smoothing_window = st.sidebar.slider("Smoothing Window", 1, 5, 1, 1, help="Moving average window size to smooth out jittery predictions.")
-    viz_mode = st.sidebar.radio("Timeline View", ["Line Chart", "Heatmap"], index=0, horizontal=True)
-    
+
+    st.sidebar.markdown(
+        "#### <i class='fa-solid fa-clock-rotate-left icon-mar'></i> Temporal Analysis",
+        unsafe_allow_html=True,
+    )
+    stride_seconds = st.sidebar.slider(
+        "Time Step (Resolution)",
+        0.5,
+        3.0,
+        1.5,
+        0.5,
+        help="How often the model makes a prediction. Smaller step = higher detail but slower processing.",
+    )
+    smoothing_window = st.sidebar.slider(
+        "Smoothing Window",
+        1,
+        5,
+        1,
+        1,
+        help="Moving average window size to smooth out jittery predictions.",
+    )
+    viz_mode = st.sidebar.radio(
+        "Timeline View", ["Line Chart", "Heatmap"], index=0, horizontal=True
+    )
+
     strategy = st.sidebar.selectbox("Aggregation Strategy", ["Mean", "Max"], 0)
     st.sidebar.divider()
-    if st.sidebar.button("Logout"):
-        st.session_state['logged_in'] = False
-        st.session_state['username'] = None
-        st.session_state['prediction_result'] = None
+    if st.sidebar.button("Logout", key="logout_btn"):
+        st.session_state["logged_in"] = False
+        st.session_state["username"] = None
+        st.session_state["prediction_result"] = None
         st.rerun()
-    
+
     # Main Content
-    st.markdown("<h1><i class='fa-solid fa-music icon-mar'></i> Instrunet AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #7f8c8d;'>Deep Learning Musical Instrument Detection</p>", unsafe_allow_html=True)
+    st.markdown(
+        "<h1><i class='fa-solid fa-music icon-mar'></i> Instrunet AI</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='text-align: center; color: #7f8c8d;'>Deep Learning Musical Instrument Detection</p>",
+        unsafe_allow_html=True,
+    )
     st.markdown("---")
-    
+
     # Input Container
     with st.container():
-        st.markdown("### <i class='fa-solid fa-folder-open icon-mar'></i> Analysis Input", unsafe_allow_html=True)
-        
+        st.markdown(
+            "### <i class='fa-solid fa-folder-open icon-mar'></i> Analysis Input",
+            unsafe_allow_html=True,
+        )
+
         tab_upload, tab_record = st.tabs(["📤 Upload File", "🎙️ Record Audio"])
-        
+
         uploaded_file = None
         with tab_upload:
-            file_upload = st.file_uploader("Upload Audio (WAV/MP3)", type=['wav', 'mp3'], label_visibility="collapsed")
+            file_upload = st.file_uploader(
+                "Upload Audio (WAV/MP3)",
+                type=["wav", "mp3"],
+                label_visibility="collapsed",
+            )
             if file_upload:
                 uploaded_file = file_upload
-                
+
         with tab_record:
             # Streamlit 1.34+ audio_input
-            recorded_audio = st.audio_input("Record your instrument performance", label_visibility="collapsed")
+            recorded_audio = st.audio_input(
+                "Record your instrument performance", label_visibility="collapsed"
+            )
             if recorded_audio:
                 uploaded_file = recorded_audio
 
         if uploaded_file is not None:
             # Generate a consistent name for recorded files
-            fname = getattr(uploaded_file, 'name', 'recorded_audio.wav')
-            
-            if 'audio_data' not in st.session_state or st.session_state.get('last_file') != fname:
-                y, sr = librosa.load(uploaded_file, sr=None)
-                st.session_state['audio_data'] = (y, sr)
-                st.session_state['last_file'] = fname
-                st.session_state['prediction_result'] = None
+            fname = getattr(uploaded_file, "name", "recorded_audio.wav")
 
-            y, sr = st.session_state['audio_data']
-            
+            if (
+                "audio_data" not in st.session_state
+                or st.session_state.get("last_file") != fname
+            ):
+                y, sr = librosa.load(uploaded_file, sr=None)
+                st.session_state["audio_data"] = (y, sr)
+                st.session_state["last_file"] = fname
+                st.session_state["prediction_result"] = None
+
+            y, sr = st.session_state["audio_data"]
+
             col_audio, col_btn = st.columns([3, 1], vertical_alignment="bottom")
             with col_audio:
                 st.audio(uploaded_file)
-            
+
             run_clicked = False
             with col_btn:
                 if st.button("🚀 Identify Instruments", width="stretch"):
                     run_clicked = True
-            
+
             # Guest Usage Logic
-            is_guest = st.session_state.get('username') == 'Guest'
+            is_guest = st.session_state.get("username") == "Guest"
             if is_guest:
-                usage = st.session_state.get('guest_usage', 0)
+                usage = st.session_state.get("guest_usage", 0)
                 st.caption(f"Guest Usage: {usage}/10")
-            
+
             if run_clicked:
-                if is_guest and st.session_state.get('guest_usage', 0) >= 10:
-                    st.error("🚫 Guest limit reached (10/10). Please create an account to continue.")
+                if is_guest and st.session_state.get("guest_usage", 0) >= 10:
+                    st.error(
+                        "🚫 Guest limit reached (10/10). Please create an account to continue."
+                    )
                 else:
                     with st.spinner("Processing audio & extracting features..."):
-                        res = run_inference(fname, y, sr, threshold, sensitivity, strategy, stride_seconds)
+                        res = run_inference(
+                            fname,
+                            y,
+                            sr,
+                            threshold,
+                            sensitivity,
+                            strategy,
+                            stride_seconds,
+                        )
                         if res:
-                            st.session_state['prediction_result'] = res
+                            st.session_state["prediction_result"] = res
                             st.success("Analysis Complete!")
                             if is_guest:
-                                st.session_state['guest_usage'] = st.session_state.get('guest_usage', 0) + 1
+                                st.session_state["guest_usage"] = (
+                                    st.session_state.get("guest_usage", 0) + 1
+                                )
 
     # Visualization (Expander)
     if uploaded_file is not None:
         st.write("")
-        with st.expander("📊 Audio Visualization (Waveform & Spectrogram)", expanded=False):
+        with st.expander(
+            "📊 Audio Visualization (Waveform & Spectrogram)", expanded=False
+        ):
             tab1, tab2 = st.tabs(["Waveform", "Spectrogram"])
             with tab1:
                 fig_wav = plot_waveform(y, sr)
                 st.pyplot(fig_wav)
-                st.session_state['plot_wav_path'] = os.path.join(tempfile.gettempdir(), "temp_wav.png")
-                fig_wav.savefig(st.session_state['plot_wav_path'])
+                st.session_state["plot_wav_path"] = os.path.join(
+                    tempfile.gettempdir(), "temp_wav.png"
+                )
+                fig_wav.savefig(st.session_state["plot_wav_path"])
             with tab2:
                 fig_spec = plot_mel_spectrogram(y, sr)
                 st.pyplot(fig_spec)
-                st.session_state['plot_spec_path'] = os.path.join(tempfile.gettempdir(), "temp_spec.png")
-                fig_spec.savefig(st.session_state['plot_spec_path'])
+                st.session_state["plot_spec_path"] = os.path.join(
+                    tempfile.gettempdir(), "temp_spec.png"
+                )
+                fig_spec.savefig(st.session_state["plot_spec_path"])
 
     # Results Section
-    if st.session_state.get('prediction_result'):
+    if st.session_state.get("prediction_result"):
         st.markdown("---")
-        st.markdown("### <i class='fa-solid fa-bullseye icon-mar'></i> Analysis Results", unsafe_allow_html=True)
-        res = st.session_state['prediction_result']
-        
+        st.markdown(
+            "### <i class='fa-solid fa-bullseye icon-mar'></i> Analysis Results",
+            unsafe_allow_html=True,
+        )
+        res = st.session_state["prediction_result"]
+
         # Summary Row
-        detected = [p['instrument'] for p in res['predictions'] if p['detected']]
-        
+        detected = [p["instrument"] for p in res["predictions"] if p["detected"]]
+
         if detected:
             st.write("#### Detected Instruments:")
             cols = st.columns(min(len(detected), 4))
@@ -687,29 +749,41 @@ def dashboard_page():
 
         # Timeline Analysis
         with st.expander("📈 Temporal Timeline Analysis", expanded=True):
-             if viz_mode == "Line Chart":
-                 fig_timeline = plot_timeline_linechart(res['timeline'], smoothing_window=smoothing_window)
-             else:
-                 fig_timeline = plot_timeline_heatmap(res['timeline'], smoothing_window=smoothing_window)
-                 
-             st.pyplot(fig_timeline)
-             st.session_state['plot_timeline_path'] = os.path.join(tempfile.gettempdir(), "temp_timeline.png")
-             fig_timeline.savefig(st.session_state['plot_timeline_path'])
-        
+            if viz_mode == "Line Chart":
+                fig_timeline = plot_timeline_linechart(
+                    res["timeline"], smoothing_window=smoothing_window
+                )
+            else:
+                fig_timeline = plot_timeline_heatmap(
+                    res["timeline"], smoothing_window=smoothing_window
+                )
+
+            st.pyplot(fig_timeline)
+            st.session_state["plot_timeline_path"] = os.path.join(
+                tempfile.gettempdir(), "temp_timeline.png"
+            )
+            fig_timeline.savefig(st.session_state["plot_timeline_path"])
+
         st.write("")
-        
+
         # Detailed Progress Bars
         col_res1, col_res2 = st.columns([2, 1])
         with col_res1:
-            st.markdown("#### <i class='fa-solid fa-chart-simple icon-mar'></i> Confidence Levels", unsafe_allow_html=True)
-            for p in res['predictions']:
-                color = "green" if p['detected'] else "gray"
-                label = f"{p['instrument']} ({p['confidence']*100:.1f}%)"
-                st.progress(p['confidence'], text=label)
-        
+            st.markdown(
+                "#### <i class='fa-solid fa-chart-simple icon-mar'></i> Confidence Levels",
+                unsafe_allow_html=True,
+            )
+            for p in res["predictions"]:
+                color = "green" if p["detected"] else "gray"
+                label = f"{p['instrument']} ({p['confidence'] * 100:.1f}%)"
+                st.progress(p["confidence"], text=label)
+
         with col_res2:
-            st.markdown("#### <i class='fa-solid fa-toolbox icon-mar'></i> Actions", unsafe_allow_html=True)
-            
+            st.markdown(
+                "#### <i class='fa-solid fa-toolbox icon-mar'></i> Actions",
+                unsafe_allow_html=True,
+            )
+
             # Everyone can download reports
             json_data = generate_json_report(res)
             st.download_button(
@@ -717,45 +791,59 @@ def dashboard_page():
                 data=json_data,
                 file_name=f"analysis_{uploaded_file.name}.json",
                 mime="application/json",
-                use_container_width=True
+                use_container_width=True,
             )
-            
+
             pdf_plots = [
-                st.session_state.get('plot_wav_path'),
-                st.session_state.get('plot_spec_path'),
-                st.session_state.get('plot_timeline_path')
+                st.session_state.get("plot_wav_path"),
+                st.session_state.get("plot_spec_path"),
+                st.session_state.get("plot_timeline_path"),
             ]
             # Filter out None values
             pdf_plots = [p for p in pdf_plots if p is not None]
 
-            pdf_bytes = generate_pdf_report(
-                res,
-                plots=pdf_plots
-            )
+            pdf_bytes = generate_pdf_report(res, plots=pdf_plots)
             st.download_button(
                 label="Download PDF Report",
                 data=pdf_bytes,
                 file_name=f"report_{uploaded_file.name}.pdf",
                 mime="application/pdf",
-                use_container_width=True
+                use_container_width=True,
             )
 
             st.divider()
-            
+
             # Saving to Database (Restricted to Registered Users)
-            if st.session_state.get('username') == 'Guest':
-                st.button("Save to History", help="Log in to save results to your account history.", disabled=True, use_container_width=True)
-                st.markdown("<p style='font-size: 0.8rem; color: #7f8c8d;'><i class='fa-solid fa-lock'></i> Log in to save results to your cloud profile.</p>", unsafe_allow_html=True)
+            if st.session_state.get("username") == "Guest":
+                st.button(
+                    "Save to History",
+                    help="Log in to save results to your account history.",
+                    disabled=True,
+                    use_container_width=True,
+                )
+                st.markdown(
+                    "<p style='font-size: 0.8rem; color: #7f8c8d;'><i class='fa-solid fa-lock'></i> Log in to save results to your cloud profile.</p>",
+                    unsafe_allow_html=True,
+                )
             else:
-                if st.button("Save to History", help="Save this analysis to your account history.", use_container_width=True):
-                    st.info("Feature coming soon! Database integration (Supabase/PostgreSQL) is in the project roadmap.")
+                if st.button(
+                    "Save to History",
+                    help="Save this analysis to your account history.",
+                    use_container_width=True,
+                ):
+                    st.info(
+                        "Feature coming soon! Database integration (Supabase/PostgreSQL) is in the project roadmap."
+                    )
 
     # Power User Section (Footer)
     st.write("")
     st.write("")
     with st.expander("🔧 Model Diagnostics (Power User)", expanded=False):
-        st.markdown("<p style='font-size: 0.9rem;'>These metrics represent the overall performance of the model on the test dataset.</p>", unsafe_allow_html=True)
-        
+        st.markdown(
+            "<p style='font-size: 0.9rem;'>These metrics represent the overall performance of the model on the test dataset.</p>",
+            unsafe_allow_html=True,
+        )
+
         # Paths to static assets
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         outputs_dir = os.path.join(project_root, "outputs")
@@ -765,28 +853,40 @@ def dashboard_page():
 
         # 1. Classification Report (Table)
         if os.path.exists(report_path):
-            st.markdown("#### <i class='fa-solid fa-table-list icon-mar'></i> Global Classification Report", unsafe_allow_html=True)
+            st.markdown(
+                "#### <i class='fa-solid fa-table-list icon-mar'></i> Global Classification Report",
+                unsafe_allow_html=True,
+            )
             try:
                 import pandas as pd
+
                 df_metrics = pd.read_csv(report_path)
                 st.dataframe(df_metrics, width="stretch")
             except Exception as e:
                 st.error(f"Could not load metrics table: {e}")
-        
+
         # 2. Visualizations (Columns)
         col_m1, col_m2 = st.columns(2)
-        
+
         with col_m1:
             st.subheader("Confusion Matrix")
             if os.path.exists(conf_matrix_path):
-                st.image(conf_matrix_path, caption="Normalized Confusion Matrix", width="stretch")
+                st.image(
+                    conf_matrix_path,
+                    caption="Normalized Confusion Matrix",
+                    width="stretch",
+                )
             else:
                 st.warning("Confusion Matrix image not found.")
 
         with col_m2:
             st.subheader("ROC Curves")
             if os.path.exists(roc_path):
-                st.image(roc_path, caption="Receiver Operating Characteristic (ROC)", width="stretch")
+                st.image(
+                    roc_path,
+                    caption="Receiver Operating Characteristic (ROC)",
+                    width="stretch",
+                )
             else:
                 st.warning("ROC Curves image not found.")
 
@@ -814,4 +914,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
