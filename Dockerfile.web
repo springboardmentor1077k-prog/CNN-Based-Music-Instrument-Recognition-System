@@ -13,8 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Python dependencies
 COPY requirements-prod.txt .
-RUN pip install --no-cache-dir "tensorflow<2.16" && \
-    pip install --no-cache-dir -r requirements-prod.txt
+RUN pip install --default-timeout=1000 --no-cache-dir -r requirements-prod.txt
 
 # Copy application files
 COPY src/ ./src/
