@@ -74,10 +74,8 @@ def save_users(users):
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-
 def verify_password(stored_hash, password):
     return stored_hash == hash_password(password)
-
 
 def signup(username, password):
     users = load_users()
@@ -87,7 +85,6 @@ def signup(username, password):
     users[username] = {"password": hash_password(password)}
     save_users(users)
     return True, "Account created successfully! Please login."
-
 
 def login(username, password):
     users = load_users()
@@ -112,7 +109,6 @@ def plot_waveform(y, sr):
     plt.tight_layout()
     return fig
 
-
 def plot_mel_spectrogram(y, sr):
     fig, ax = plt.subplots(figsize=(10, 4))
     M = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, power=1.0)
@@ -124,7 +120,6 @@ def plot_mel_spectrogram(y, sr):
     ax.set_xlabel("Time (s)")
     plt.tight_layout()
     return fig
-
 
 def plot_timeline_linechart(timeline_data, smoothing_window=1):
     # Prepare data for Line Chart
@@ -165,7 +160,6 @@ def plot_timeline_linechart(timeline_data, smoothing_window=1):
     ax.set_ylabel("Confidence Score")
     plt.tight_layout()
     return fig
-
 
 def plot_timeline_heatmap(timeline_data, smoothing_window=1):
     # Prepare data for Heatmap
@@ -231,9 +225,12 @@ def generate_pdf_report(result_obj, plots=None):
     # Metadata
     pdf.chapter_title("Project & File Details")
     details = (
-        f"File Name: {result_obj['metadata']['filename']}\n"
-        f"Duration: {result_obj['metadata']['duration']:.2f}s\n"
-        f"Analysis Date: {result_obj['metadata']['date']}\n"
+        f"File Name: {result_obj['metadata']['filename']}
+"
+        f"Duration: {result_obj['metadata']['duration']:.2f}s
+"
+        f"Analysis Date: {result_obj['metadata']['date']}
+"
         f"Model Threshold: {result_obj['threshold']}"
     )
     pdf.chapter_body(details)
@@ -282,6 +279,11 @@ def generate_pdf_report(result_obj, plots=None):
         ]
 
         for i, plot_path in enumerate(plots):
+            # Check for page break before adding new plot
+            # Approx height needed: Title (10) + Image (approx 100) + Margin (10) = 120
+            if pdf.get_y() > 170: 
+                pdf.add_page()
+
             # If we have a title for this plot index, use it
             if i < len(titles):
                 pdf.set_font("Arial", "B", 11)
@@ -289,10 +291,6 @@ def generate_pdf_report(result_obj, plots=None):
 
             pdf.image(plot_path, x=10, w=180)
             pdf.ln(5)
-
-            # Check for page break
-            if pdf.get_y() > 250:
-                pdf.add_page()
 
     return pdf.output(dest="S").encode("latin-1")
 
@@ -357,7 +355,6 @@ def load_model_cached():
         st.error(f"Error loading model: {e}")
         return None
 
-
 def run_inference(
     filename, y, sr, threshold=0.4, sensitivity=1.0, strategy="Mean", stride_seconds=1.5
 ):
@@ -373,7 +370,7 @@ def run_inference(
     # Pad if shorter than window
     if len(y) < window_size:
         pad_width = window_size - len(y)
-        windows.append(np.pad(y, (0, pad_width), mode="constant"))
+        windows.append(np.pad(y, (0, pad_width), mode="constant")
     else:
         for start in range(0, len(y) - window_size + 1, stride):
             windows.append(y[start : start + window_size])
@@ -522,7 +519,6 @@ def login_page():
             st.session_state["page"] = "signup"
             st.rerun()
 
-
 def signup_page():
     load_css()
     st.title(APP_TITLE)
@@ -557,7 +553,6 @@ def signup_page():
     if st.button("Back to Login", use_container_width=True):
         st.session_state["page"] = "login"
         st.rerun()
-
 
 def dashboard_page():
     load_css()
@@ -703,7 +698,7 @@ def dashboard_page():
     if uploaded_file is not None:
         st.write("")
         with st.expander(
-            "📊 Audio Visualization (Waveform & Spectrogram)", expanded=False
+            "📊 Audio Visualization (Waveform & Spectrogram)", expanded=True
         ):
             tab1, tab2 = st.tabs(["Waveform", "Spectrogram"])
             with tab1:
@@ -813,27 +808,8 @@ def dashboard_page():
 
             st.divider()
 
-            # Saving to Database (Restricted to Registered Users)
-            if st.session_state.get("username") == "Guest":
-                st.button(
-                    "Save to History",
-                    help="Log in to save results to your account history.",
-                    disabled=True,
-                    use_container_width=True,
-                )
-                st.markdown(
-                    "<p style='font-size: 0.8rem; color: #7f8c8d;'><i class='fa-solid fa-lock'></i> Log in to save results to your cloud profile.</p>",
-                    unsafe_allow_html=True,
-                )
-            else:
-                if st.button(
-                    "Save to History",
-                    help="Save this analysis to your account history.",
-                    use_container_width=True,
-                ):
-                    st.info(
-                        "Feature coming soon! Database integration (Supabase/PostgreSQL) is in the project roadmap."
-                    )
+            # Saving to Database (Placeholder for future implementation)
+            # if st.session_state.get("username") == "Guest": ... (Removed for now)
 
     # Power User Section (Footer)
     st.write("")
@@ -892,7 +868,6 @@ def dashboard_page():
 
 
 # --- Main App Logic ---
-
 
 def main():
     st.set_page_config(page_title=APP_TITLE, page_icon="🎵", layout="wide")
