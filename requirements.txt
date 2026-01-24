@@ -19,3 +19,6 @@ protobuf>=3.20,<5
 
 #backend logic
 bcrypt
+
+#model download
+gdown
