@@ -3,7 +3,7 @@
 
 **InstruNet AI** is a Streamlit-based web application for **automatic music instrument recognition** using a **CNN-based multilabel deep learning model**. The system detects multiple musical instruments from an audio input and presents results through an interactive dashboard.
 
-This project was developed as part of an **internship / academic project**, covering the complete machine learning lifecycle — preprocessing, model training, evaluation, inference pipeline design, and frontend integration.
+This project was developed as part of an **internship project**, covering the complete machine learning lifecycle — preprocessing, model training, evaluation, inference pipeline design, and frontend integration.
 
 ---
 
