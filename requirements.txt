@@ -1,0 +1,12 @@
+numpy
+pandas
+librosa
+streamlit
+scikit-learn
+matplotlib
+soundfile
+tensorflow
+reportlab
+Pillow
+tqdm
+pathlib

@@ -1,0 +1,27 @@
+# IDE
+.idea/
+
+# Data (large)
+Data/
+
+# Notebooks
+Jupyter notebooks/
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# Ignore large model checkpoints
+Models_made/*.keras
+Model/*.keras
+
+# OS
+.DS_Store
+Thumbs.db
+!Data/Split/label_map.json
+!Models_made/instrunet_irmas_sgd.keras
