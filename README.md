@@ -193,7 +193,6 @@ This project was developed as **Task** - the final deliverable of a comprehensiv
 ## 🔒 Security Notes
 
 ### Authentication
-- Default password: `instrunet2025`
 - Set custom password via environment variable
 - Session-based authentication
 - Automatic logout functionality
