@@ -5,7 +5,7 @@ streamlit
 scikit-learn
 matplotlib
 soundfile
-tensorflow
+tensorflow==2.15.0
 reportlab
 Pillow
 tqdm
