@@ -9,4 +9,3 @@ tensorflow
 reportlab
 Pillow
 tqdm
-pathlib
